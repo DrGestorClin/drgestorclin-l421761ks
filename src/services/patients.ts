@@ -22,6 +22,32 @@ export const getPatients = async (): Promise<Patient[]> =>
 export const getPatient = async (id: string): Promise<Patient> =>
   pb.collection('patients').getOne(id, { expand: 'doctor' })
 
+export const getPatientsByDoctor = async (doctorId: string): Promise<Patient[]> =>
+  pb.collection('patients').getFullList({
+    filter: `doctor = "${doctorId}"`,
+    expand: 'doctor',
+    sort: '-created',
+  })
+
+export const getHistoricalPatients = async (doctorId: string): Promise<Patient[]> => {
+  const records = await pb.collection('medical_records').getFullList({
+    filter: `doctor = "${doctorId}"`,
+  })
+
+  const patientIds = [...new Set(records.map((r: any) => r.patient))]
+
+  if (patientIds.length === 0) return []
+
+  const filterStr = patientIds.map((pid) => `id = "${pid}"`).join(' || ')
+
+  const patients = await pb.collection('patients').getFullList({
+    filter: filterStr,
+    expand: 'doctor',
+  })
+
+  return patients.filter((p: any) => p.doctor !== doctorId) as Patient[]
+}
+
 export const createPatient = async (data: {
   name: string
   birth_date?: string

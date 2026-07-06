@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T19:35:11.613Z",
+  "generatedAt": "2026-07-06T20:01:30.129Z",
   "collections": [
     {
       "name": "users",
@@ -44,6 +44,13 @@
           "required": false,
           "system": false,
           "selectValues": ["admin", "doctor", "staff"]
+        },
+        {
+          "name": "doctor_ref",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "doctors"
         }
       ],
       "indexes": [

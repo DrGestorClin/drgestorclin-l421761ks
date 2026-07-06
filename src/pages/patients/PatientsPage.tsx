@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getPatients, type Patient } from '@/services/patients'
+import { useAuth } from '@/hooks/use-auth'
+import {
+  getPatients,
+  getPatientsByDoctor,
+  getHistoricalPatients,
+  type Patient,
+} from '@/services/patients'
 import { getDoctors, type Doctor } from '@/services/doctors'
 import {
   Table,
@@ -14,24 +20,39 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Search, UserCircle } from 'lucide-react'
 import { PatientFormSheet } from '@/components/patient-form-sheet'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 
 export default function PatientsPage() {
+  const { isAdmin, isDoctor, doctorId } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [patients, setPatients] = useState<Patient[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('current')
 
   const loadData = useCallback(async () => {
     try {
-      const [patientData, doctorData] = await Promise.all([getPatients(), getDoctors()])
-      setPatients(patientData as Patient[])
+      const doctorData = await getDoctors()
       setDoctors(doctorData as Doctor[])
+
+      if (isAdmin) {
+        const patientData = await getPatients()
+        setPatients(patientData as Patient[])
+      } else if (doctorId) {
+        if (activeTab === 'current') {
+          const patientData = await getPatientsByDoctor(doctorId)
+          setPatients(patientData as Patient[])
+        } else {
+          const patientData = await getHistoricalPatients(doctorId)
+          setPatients(patientData as Patient[])
+        }
+      }
     } catch {
       toast({
         title: 'Erro',
@@ -41,7 +62,7 @@ export default function PatientsPage() {
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [isAdmin, doctorId, activeTab, toast])
 
   useEffect(() => {
     loadData()
@@ -50,6 +71,11 @@ export default function PatientsPage() {
   useRealtime('patients', () => {
     loadData()
   })
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    setLoading(true)
+  }
 
   const filtered = patients.filter(
     (p) =>
@@ -68,11 +94,28 @@ export default function PatientsPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Pacientes</h2>
           <p className="text-muted-foreground mt-1">
-            Gerencie o cadastro de pacientes e seus médicos responsáveis.
+            {isAdmin
+              ? 'Gerencie o cadastro de pacientes e seus médicos responsáveis.'
+              : 'Acesse os pacientes sob seus cuidados.'}
           </p>
         </div>
-        <PatientFormSheet doctors={doctors} onSuccess={loadData} />
+        {isAdmin && <PatientFormSheet doctors={doctors} onSuccess={loadData} />}
       </div>
+
+      {isDoctor && (
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList>
+            <TabsTrigger value="current">Meus Pacientes</TabsTrigger>
+            <TabsTrigger value="history">Pacientes Anteriores</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
+      {isDoctor && activeTab === 'history' && (
+        <p className="text-sm text-muted-foreground">
+          Pacientes anteriormente atendidos por você. Acesso apenas leitura.
+        </p>
+      )}
 
       <div className="bg-white rounded-md border shadow-sm overflow-hidden">
         <div className="p-4 border-b flex items-center max-w-sm relative bg-slate-50/50">
@@ -138,7 +181,9 @@ export default function PatientsPage() {
             {!loading && filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
-                  Nenhum paciente encontrado.
+                  {activeTab === 'history'
+                    ? 'Nenhum paciente anterior encontrado.'
+                    : 'Nenhum paciente encontrado.'}
                 </TableCell>
               </TableRow>
             )}

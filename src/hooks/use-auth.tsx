@@ -7,12 +7,15 @@ interface AuthUser {
   name: string
   role: string
   avatar?: string
+  doctor_ref?: string
 }
 
 interface AuthContextType {
   user: AuthUser | null
   isAuthenticated: boolean
   isAdmin: boolean
+  isDoctor: boolean
+  doctorId: string | null
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => void
@@ -84,6 +87,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const isAdmin = user?.role === 'admin'
+  const isDoctor = user?.role === 'doctor'
+  const doctorId = user?.doctor_ref || null
 
   return (
     <AuthContext.Provider
@@ -91,6 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isAuthenticated,
         isAdmin,
+        isDoctor,
+        doctorId,
         signIn,
         signUp,
         signOut,

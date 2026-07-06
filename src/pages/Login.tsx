@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import pb from '@/lib/pocketbase/client'
 import logoUrl from '@/assets/geminigeneratedimagel0e5l0l0e5l0l0e5-7b51d.png'
 
 export default function LoginPage() {
@@ -29,7 +30,8 @@ export default function LoginPage() {
       setError(getErrorMessage(error))
       setLoading(false)
     } else {
-      navigate('/')
+      const role = (pb.authStore.record as any)?.role || ''
+      navigate(role === 'doctor' ? '/patients' : '/')
     }
   }
 

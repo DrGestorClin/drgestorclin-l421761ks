@@ -54,8 +54,13 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const location = useLocation()
-  const { user, signOut } = useAuth()
+  const { user, signOut, isDoctor } = useAuth()
   const navigate = useNavigate()
+
+  const DOCTOR_HIDDEN = ['Médicos', 'Fornecedores', 'Financeiro', 'Configurações']
+  const navItems = isDoctor
+    ? NAV_ITEMS.filter((item) => !DOCTOR_HIDDEN.includes(item.title))
+    : NAV_ITEMS
 
   const handleSignOut = () => {
     signOut()
@@ -87,7 +92,7 @@ export default function Layout() {
             <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {NAV_ITEMS.map((item) => {
+                {navItems.map((item) => {
                   const isActive = location.pathname === item.url && item.url !== '#'
                   return (
                     <SidebarMenuItem key={item.title}>
