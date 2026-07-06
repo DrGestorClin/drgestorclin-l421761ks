@@ -19,8 +19,6 @@ import {
   Users,
   UserRound,
   Calendar as CalendarIcon,
-  BriefcaseMedical,
-  Wallet,
   Settings,
   Search,
   Bell,
@@ -47,8 +45,6 @@ const NAV_ITEMS = [
   { title: 'Pacientes', url: '/patients', icon: Users },
   { title: 'Médicos', url: '/doctors', icon: UserRound },
   { title: 'Modelos', url: '/templates', icon: FileText },
-  { title: 'Fornecedores', url: '#', icon: BriefcaseMedical },
-  { title: 'Financeiro', url: '#', icon: Wallet },
   { title: 'Configurações', url: '#', icon: Settings },
 ]
 
@@ -57,7 +53,7 @@ export default function Layout() {
   const { user, signOut, isDoctor } = useAuth()
   const navigate = useNavigate()
 
-  const DOCTOR_HIDDEN = ['Médicos', 'Fornecedores', 'Financeiro', 'Configurações']
+  const DOCTOR_HIDDEN = ['Médicos', 'Configurações']
   const navItems = isDoctor
     ? NAV_ITEMS.filter((item) => !DOCTOR_HIDDEN.includes(item.title))
     : NAV_ITEMS

@@ -1,8 +1,18 @@
-import { useState } from 'react'
-import { MOCK_APPOINTMENTS, MOCK_PATIENTS, MOCK_DOCTORS } from '@/lib/mock-data'
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '@/hooks/use-auth'
+import { useRealtime } from '@/hooks/use-realtime'
+import { getDoctors, type Doctor } from '@/services/doctors'
+import { getPatients, type Patient } from '@/services/patients'
+import {
+  getAppointmentsByDoctor,
+  createAppointment,
+  type Appointment,
+} from '@/services/appointments'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Plus, MessageCircle, FileText } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { ChevronLeft, ChevronRight, Plus, MessageCircle, FileText } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Link } from 'react-router-dom'
@@ -14,8 +24,6 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -34,19 +42,110 @@ const STATUS_COLORS: Record<string, string> = {
   Falta: 'bg-black',
 }
 
+const formatDateInput = (date: Date) => date.toISOString().split('T')[0]
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate()
+
+const formatTime = (iso: string) => {
+  if (!iso) return ''
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function AgendaPage() {
   const { toast } = useToast()
+  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [selectedDoctor, setSelectedDoctor] = useState('')
+  const [selectedDate, setSelectedDate] = useState(new Date())
   const [view, setView] = useState<'dia' | 'lista'>('dia')
-  const [selectedDoctor, setSelectedDoctor] = useState('1')
+  const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formData, setFormData] = useState({
+    patient: '',
+    date: formatDateInput(new Date()),
+    time: '09:00',
+    type: 'Consulta',
+  })
+
+  const loadData = useCallback(async () => {
+    try {
+      const [doctorData, patientData] = await Promise.all([getDoctors(), getPatients()])
+      setDoctors(doctorData as Doctor[])
+      setPatients(patientData as Patient[])
+      if (doctorData.length > 0 && !selectedDoctor) {
+        setSelectedDoctor(doctorData[0].id)
+      }
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao carregar dados.', variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast, selectedDoctor])
+
+  const loadAppointments = useCallback(async () => {
+    if (!selectedDoctor) return
+    try {
+      const data = await getAppointmentsByDoctor(selectedDoctor)
+      setAppointments(data as Appointment[])
+    } catch {
+      setAppointments([])
+    }
+  }, [selectedDoctor])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+  useEffect(() => {
+    loadAppointments()
+  }, [loadAppointments])
+  useRealtime('appointments', () => {
+    loadAppointments()
+  })
+
+  const visibleAppointments =
+    view === 'dia'
+      ? appointments.filter((a) => isSameDay(new Date(a.start_time), selectedDate))
+      : appointments
+
+  const prevDay = () => setSelectedDate(new Date(selectedDate.getTime() - 86400000))
+  const nextDay = () => setSelectedDate(new Date(selectedDate.getTime() + 86400000))
+  const goToday = () => setSelectedDate(new Date())
 
   const handleWhatsApp = () => {
-    toast({
-      title: 'WhatsApp Enviado',
-      description: 'Lembrete de consulta enviado com sucesso para o paciente.',
-    })
+    toast({ title: 'WhatsApp Enviado', description: 'Lembrete de consulta enviado com sucesso.' })
   }
 
-  const appointments = MOCK_APPOINTMENTS.filter((a) => a.doctorId === selectedDoctor)
+  const handleSubmit = async () => {
+    setSaving(true)
+    try {
+      const startTime = new Date(`${formData.date}T${formData.time}`).toISOString()
+      await createAppointment({
+        patient: formData.patient,
+        doctor: selectedDoctor,
+        start_time: startTime,
+        status: 'Agendado',
+        type: formData.type,
+      })
+      toast({ title: 'Agendado', description: 'Consulta agendada com sucesso.' })
+      setDialogOpen(false)
+      setFormData({
+        patient: '',
+        date: formatDateInput(selectedDate),
+        time: '09:00',
+        type: 'Consulta',
+      })
+      await loadAppointments()
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao agendar consulta.', variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-fade-in flex flex-col h-[calc(100vh-8rem)] min-h-[500px]">
@@ -60,17 +159,17 @@ export default function AgendaPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
             <SelectTrigger className="w-[200px] bg-white">
-              <SelectValue />
+              <SelectValue placeholder="Selecione o médico" />
             </SelectTrigger>
             <SelectContent>
-              {MOCK_DOCTORS.map((d) => (
+              {doctors.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" /> Agendar
@@ -83,12 +182,15 @@ export default function AgendaPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label>Paciente</Label>
-                  <Select>
+                  <Select
+                    value={formData.patient}
+                    onValueChange={(v) => setFormData((prev) => ({ ...prev, patient: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {MOCK_PATIENTS.map((p) => (
+                      {patients.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.name}
                         </SelectItem>
@@ -99,35 +201,42 @@ export default function AgendaPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Data</Label>
-                    <Input type="date" />
+                    <Input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label>Hora</Label>
-                    <Input type="time" />
+                    <Input
+                      type="time"
+                      value={formData.time}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, time: e.target.value }))}
+                    />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label>Tipo de Atendimento</Label>
-                  <Select defaultValue="consulta">
+                  <Select
+                    value={formData.type}
+                    onValueChange={(v) => setFormData((prev) => ({ ...prev, type: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="consulta">Consulta</SelectItem>
-                      <SelectItem value="retorno">Retorno</SelectItem>
-                      <SelectItem value="procedimento">Procedimento</SelectItem>
+                      <SelectItem value="Consulta">Consulta</SelectItem>
+                      <SelectItem value="Retorno">Retorno</SelectItem>
+                      <SelectItem value="Procedimento">Procedimento</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <DialogFooter>
                 <Button
-                  onClick={() =>
-                    toast({
-                      title: 'Agendado',
-                      description: 'Gatilho do WhatsApp disparado para confirmação imediata.',
-                    })
-                  }
+                  onClick={handleSubmit}
+                  disabled={saving || !formData.patient || !selectedDoctor}
                 >
                   Salvar Agendamento
                 </Button>
@@ -140,11 +249,17 @@ export default function AgendaPage() {
       <div className="bg-white rounded-md border shadow-sm flex-1 flex flex-col overflow-hidden">
         <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
           <div className="flex items-center gap-2 self-center sm:self-auto">
-            <Button variant="outline" size="icon" className="bg-white">
+            <Button variant="outline" size="icon" className="bg-white" onClick={prevDay}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="font-semibold text-lg min-w-[120px] text-center">Hoje</span>
-            <Button variant="outline" size="icon" className="bg-white">
+            <Button variant="ghost" onClick={goToday}>
+              <span className="font-semibold text-lg min-w-[120px] text-center">
+                {view === 'dia'
+                  ? selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+                  : 'Todos'}
+              </span>
+            </Button>
+            <Button variant="outline" size="icon" className="bg-white" onClick={nextDay}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -168,23 +283,40 @@ export default function AgendaPage() {
 
         <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-50/30">
           <div className="space-y-4 max-w-4xl mx-auto">
-            {appointments.map((apt) => {
-              const patient = MOCK_PATIENTS.find((p) => p.id === apt.patientId)
-              return (
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Carregando agenda...</div>
+            ) : visibleAppointments.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                  <FileText className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-700">Agenda Livre</h3>
+                <p className="text-slate-500 max-w-sm mt-2">
+                  Nenhum agendamento marcado para este médico
+                  {view === 'dia' ? ' na data selecionada' : ''}.
+                </p>
+              </div>
+            ) : (
+              visibleAppointments.map((apt) => (
                 <div
                   key={apt.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-xl border bg-white shadow-sm hover:shadow-md transition-all group"
                 >
                   <div className="flex items-center gap-4 sm:w-32">
                     <div
-                      className={cn('h-4 w-4 rounded-full shadow-inner', STATUS_COLORS[apt.status])}
+                      className={cn(
+                        'h-4 w-4 rounded-full shadow-inner',
+                        STATUS_COLORS[apt.status] || 'bg-slate-400',
+                      )}
                     />
-                    <span className="font-bold text-xl">{apt.time}</span>
+                    <span className="font-bold text-xl">{formatTime(apt.start_time)}</span>
                   </div>
                   <div className="flex-1 border-l-2 border-slate-100 pl-4 sm:border-l-0 sm:pl-0">
-                    <div className="font-bold text-lg text-slate-800">{patient?.name}</div>
+                    <div className="font-bold text-lg text-slate-800">
+                      {apt.expand?.patient?.name || 'Paciente'}
+                    </div>
                     <div className="text-sm font-medium text-slate-500 mt-1">
-                      {apt.type} • {patient?.convenio}
+                      {apt.type || 'Consulta'}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
@@ -201,24 +333,13 @@ export default function AgendaPage() {
                       <MessageCircle className="h-4 w-4" />
                     </Button>
                     <Button asChild variant="default" size="icon" title="Abrir Prontuário">
-                      <Link to={`/consultation/${apt.patientId}`}>
+                      <Link to={`/patients/${apt.patient}`}>
                         <FileText className="h-4 w-4" />
                       </Link>
                     </Button>
                   </div>
                 </div>
-              )
-            })}
-            {appointments.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                  <FileText className="h-8 w-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-700">Agenda Livre</h3>
-                <p className="text-slate-500 max-w-sm mt-2">
-                  Nenhum agendamento marcado para este médico na data selecionada.
-                </p>
-              </div>
+              ))
             )}
           </div>
         </div>

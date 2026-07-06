@@ -32,3 +32,10 @@ export const updateDoctor = async (id: string, data: Partial<Doctor>): Promise<D
 
 export const softDeleteDoctor = async (id: string): Promise<Doctor> =>
   pb.collection('doctors').update(id, { active: false })
+
+export const getAllDoctors = async (): Promise<Doctor[]> =>
+  pb.collection('doctors').getFullList({
+    sort: '-created',
+  })
+
+export const deleteDoctor = async (id: string): Promise<void> => pb.collection('doctors').delete(id)

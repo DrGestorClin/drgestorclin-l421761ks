@@ -39,7 +39,7 @@ onRecordAfterCreateSuccess((e) => {
               },
               body: JSON.stringify({
                 personalizations: [{ to: [{ email: email }] }],
-                from: { email: 'contato@drgestorclin.com', name: 'DrGestorClin' },
+                from: { email: 'm.bruno.f@gmail.com', name: 'DrGestorClin' },
                 subject: 'Bem-vindo ao DrGestorClin - Sua Conta de Acesso',
                 content: [
                   {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetTrigger,
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -18,31 +17,55 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Loader2 } from 'lucide-react'
+import { Loader2, ImageIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
-import { createPatient } from '@/services/patients'
+import { createPatient, updatePatient, getPatientPhotoUrl, type Patient } from '@/services/patients'
 import type { Doctor } from '@/services/doctors'
 
-const EMPTY_FORM = {
-  name: '',
-  birth_date: '',
-  email: '',
-  phone: '',
-  doctor: '',
-}
+const EMPTY_FORM = { name: '', birth_date: '', email: '', phone: '', doctor: '' }
 
 interface PatientFormSheetProps {
   doctors: Doctor[]
   onSuccess: () => void
+  patient?: Patient | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export function PatientFormSheet({ doctors, onSuccess }: PatientFormSheetProps) {
+export function PatientFormSheet({
+  doctors,
+  onSuccess,
+  patient,
+  open,
+  onOpenChange,
+}: PatientFormSheetProps) {
   const { toast } = useToast()
-  const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState(EMPTY_FORM)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      if (patient) {
+        setFormData({
+          name: patient.name,
+          birth_date: patient.birth_date || '',
+          email: patient.email || '',
+          phone: patient.phone || '',
+          doctor: patient.doctor,
+        })
+        setPhotoPreview(getPatientPhotoUrl(patient))
+      } else {
+        setFormData(EMPTY_FORM)
+        setPhotoPreview(null)
+      }
+      setSelectedPhoto(null)
+      setFieldErrors({})
+    }
+  }, [open, patient])
 
   const handleFieldChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -55,23 +78,34 @@ export function PatientFormSheet({ doctors, onSuccess }: PatientFormSheetProps) 
     }
   }
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedPhoto(file)
+      setPhotoPreview(URL.createObjectURL(file))
+    }
+  }
+
   const handleSubmit = async () => {
     setSaving(true)
     setFieldErrors({})
     try {
-      await createPatient({
+      const data = {
         name: formData.name,
         birth_date: formData.birth_date || undefined,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
         doctor: formData.doctor,
-      })
-      toast({
-        title: 'Sucesso',
-        description: 'Paciente cadastrado com sucesso.',
-      })
-      setFormData(EMPTY_FORM)
-      setOpen(false)
+        ...(selectedPhoto ? { photo: selectedPhoto } : {}),
+      }
+      if (patient) {
+        await updatePatient(patient.id, data)
+        toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso.' })
+      } else {
+        await createPatient(data)
+        toast({ title: 'Sucesso', description: 'Paciente cadastrado com sucesso.' })
+      }
+      onOpenChange(false)
       onSuccess()
     } catch (err) {
       setFieldErrors(extractFieldErrors(err))
@@ -85,24 +119,13 @@ export function PatientFormSheet({ doctors, onSuccess }: PatientFormSheetProps) 
     }
   }
 
-  const handleOpenChange = (o: boolean) => {
-    setOpen(o)
-    if (!o) setFieldErrors({})
-  }
-
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Novo Paciente
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader className="mb-6">
-          <SheetTitle>Cadastrar Paciente</SheetTitle>
+          <SheetTitle>{patient ? 'Editar Paciente' : 'Cadastrar Paciente'}</SheetTitle>
           <SheetDescription>
-            Preencha as informações para registrar um novo paciente. Os dados são preservados ao
-            trocar de aba.
+            Preencha as informações do paciente. Os dados são preservados ao trocar de aba.
           </SheetDescription>
         </SheetHeader>
         <Tabs defaultValue="pessoal" className="w-full">
@@ -111,6 +134,28 @@ export function PatientFormSheet({ doctors, onSuccess }: PatientFormSheetProps) 
             <TabsTrigger value="medico">Dados Médicos</TabsTrigger>
           </TabsList>
           <TabsContent value="pessoal" className="space-y-4">
+            <div className="space-y-2">
+              <Label>Foto do Paciente</Label>
+              <div className="flex items-center gap-4">
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="h-16 w-16 rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full border flex items-center justify-center bg-muted">
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePhotoChange}
+                  className="flex-1"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Nome Completo</Label>
               <Input
@@ -171,7 +216,7 @@ export function PatientFormSheet({ doctors, onSuccess }: PatientFormSheetProps) 
               )}
               {doctors.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum médico ativo encontrado. Cadastre médicos primeiro.
+                  Nenhum médico encontrado. Cadastre médicos primeiro.
                 </p>
               )}
             </div>
@@ -180,7 +225,7 @@ export function PatientFormSheet({ doctors, onSuccess }: PatientFormSheetProps) 
         <div className="mt-6 flex justify-end">
           <Button onClick={handleSubmit} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Salvar Paciente
+            {patient ? 'Salvar Alterações' : 'Salvar Paciente'}
           </Button>
         </div>
       </SheetContent>

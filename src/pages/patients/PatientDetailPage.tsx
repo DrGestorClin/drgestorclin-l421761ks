@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getPatient, type Patient } from '@/services/patients'
+import { getPatient, getPatientPhotoUrl, type Patient } from '@/services/patients'
 import { getMedicalRecords, type MedicalRecord } from '@/services/medical-records'
 import { getDoctors, type Doctor } from '@/services/doctors'
 import { useAuth } from '@/hooks/use-auth'
@@ -111,7 +111,12 @@ export default function PatientDetailPage() {
       <Card>
         <CardContent className="flex flex-col sm:flex-row items-start gap-4 p-6">
           <Avatar className="h-16 w-16 border">
-            <AvatarImage src={`https://img.usecurling.com/ppl/thumbnail?seed=${patient.id}`} />
+            <AvatarImage
+              src={
+                getPatientPhotoUrl(patient) ||
+                `https://img.usecurling.com/ppl/thumbnail?seed=${patient.id}`
+              }
+            />
             <AvatarFallback>
               <UserCircle className="h-8 w-8 text-muted-foreground" />
             </AvatarFallback>

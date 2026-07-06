@@ -5,9 +5,11 @@ import {
   getPatients,
   getPatientsByDoctor,
   getHistoricalPatients,
+  deletePatient,
+  getPatientPhotoUrl,
   type Patient,
 } from '@/services/patients'
-import { getDoctors, type Doctor } from '@/services/doctors'
+import { getAllDoctors, type Doctor } from '@/services/doctors'
 import {
   Table,
   TableBody,
@@ -21,7 +23,14 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Search, UserCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Search, UserCircle, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { PatientFormSheet } from '@/components/patient-form-sheet'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
@@ -35,10 +44,12 @@ export default function PatientsPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('current')
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null)
 
   const loadData = useCallback(async () => {
     try {
-      const doctorData = await getDoctors()
+      const doctorData = await getAllDoctors()
       setDoctors(doctorData as Doctor[])
 
       if (isAdmin) {
@@ -54,11 +65,7 @@ export default function PatientsPage() {
         }
       }
     } catch {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar pacientes.',
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro', description: 'Falha ao carregar pacientes.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -67,7 +74,6 @@ export default function PatientsPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
-
   useRealtime('patients', () => {
     loadData()
   })
@@ -75,6 +81,26 @@ export default function PatientsPage() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
     setLoading(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePatient(id)
+      toast({ title: 'Sucesso', description: 'Paciente excluído com sucesso.' })
+      await loadData()
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao excluir paciente.', variant: 'destructive' })
+    }
+  }
+
+  const openCreate = () => {
+    setEditingPatient(null)
+    setFormOpen(true)
+  }
+
+  const openEdit = (patient: Patient) => {
+    setEditingPatient(patient)
+    setFormOpen(true)
   }
 
   const filtered = patients.filter(
@@ -99,7 +125,11 @@ export default function PatientsPage() {
               : 'Acesse os pacientes sob seus cuidados.'}
           </p>
         </div>
-        {isAdmin && <PatientFormSheet doctors={doctors} onSuccess={loadData} />}
+        {isAdmin && (
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Paciente
+          </Button>
+        )}
       </div>
 
       {isDoctor && (
@@ -134,13 +164,14 @@ export default function PatientsPage() {
               <TableHead>Data de Nascimento</TableHead>
               <TableHead>Contato</TableHead>
               <TableHead>Médico Responsável</TableHead>
+              <TableHead className="w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading
               ? Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={4}>
+                    <TableCell colSpan={5}>
                       <Skeleton className="h-8 w-full" />
                     </TableCell>
                   </TableRow>
@@ -154,7 +185,10 @@ export default function PatientsPage() {
                     <TableCell className="flex items-center gap-3">
                       <Avatar className="h-8 w-8 border">
                         <AvatarImage
-                          src={`https://img.usecurling.com/ppl/thumbnail?seed=${p.id}`}
+                          src={
+                            getPatientPhotoUrl(p) ||
+                            `https://img.usecurling.com/ppl/thumbnail?seed=${p.id}`
+                          }
                         />
                         <AvatarFallback>
                           <UserCircle className="h-5 w-5 text-muted-foreground" />
@@ -176,11 +210,35 @@ export default function PatientsPage() {
                         '—'
                       )}
                     </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {(isAdmin || (isDoctor && p.doctor === doctorId)) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openEdit(p)}>
+                              <Edit className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            {isAdmin && (
+                              <DropdownMenuItem
+                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                onClick={() => handleDelete(p.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
             {!loading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                   {activeTab === 'history'
                     ? 'Nenhum paciente anterior encontrado.'
                     : 'Nenhum paciente encontrado.'}
@@ -190,6 +248,16 @@ export default function PatientsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {isAdmin && (
+        <PatientFormSheet
+          doctors={doctors}
+          onSuccess={loadData}
+          patient={editingPatient}
+          open={formOpen}
+          onOpenChange={setFormOpen}
+        />
+      )}
     </div>
   )
 }

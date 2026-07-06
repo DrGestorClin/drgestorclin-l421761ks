@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getDoctors, createDoctor, softDeleteDoctor, type Doctor } from '@/services/doctors'
+import {
+  getAllDoctors,
+  createDoctor,
+  updateDoctor,
+  softDeleteDoctor,
+  deleteDoctor,
+  type Doctor,
+} from '@/services/doctors'
 import {
   Table,
   TableBody,
@@ -14,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import { Search, Plus, MoreHorizontal, Edit, Trash2, Loader2 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -34,13 +42,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 
-const EMPTY_FORM = {
-  name: '',
-  crm: '',
-  specialty: '',
-  email: '',
-  phone: '',
-}
+const EMPTY_FORM = { name: '', crm: '', specialty: '', email: '', phone: '', active: true }
 
 export default function DoctorsPage() {
   const { isAdmin } = useAuth()
@@ -52,17 +54,14 @@ export default function DoctorsPage() {
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState(EMPTY_FORM)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const loadDoctors = useCallback(async () => {
     try {
-      const data = await getDoctors()
+      const data = await getAllDoctors()
       setDoctors(data as Doctor[])
     } catch {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar médicos.',
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro', description: 'Falha ao carregar médicos.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -71,7 +70,6 @@ export default function DoctorsPage() {
   useEffect(() => {
     loadDoctors()
   }, [loadDoctors])
-
   useRealtime('doctors', () => {
     loadDoctors()
   })
@@ -85,16 +83,19 @@ export default function DoctorsPage() {
   const handleSoftDelete = async (id: string) => {
     try {
       await softDeleteDoctor(id)
-      toast({
-        title: 'Médico inativado',
-        description: 'O registro foi inativado por segurança.',
-      })
+      toast({ title: 'Médico inativado', description: 'O registro foi inativado por segurança.' })
     } catch {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao inativar médico.',
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro', description: 'Falha ao inativar médico.', variant: 'destructive' })
+    }
+  }
+
+  const handleHardDelete = async (id: string) => {
+    try {
+      await deleteDoctor(id)
+      toast({ title: 'Sucesso', description: 'Médico excluído permanentemente.' })
+      await loadDoctors()
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao excluir médico.', variant: 'destructive' })
     }
   }
 
@@ -109,16 +110,40 @@ export default function DoctorsPage() {
     }
   }
 
+  const openEdit = (doc: Doctor) => {
+    setEditingId(doc.id)
+    setFormData({
+      name: doc.name,
+      crm: doc.crm,
+      specialty: doc.specialty,
+      email: doc.email,
+      phone: doc.phone,
+      active: doc.active,
+    })
+    setFieldErrors({})
+    setSheetOpen(true)
+  }
+
+  const openCreate = () => {
+    setEditingId(null)
+    setFormData(EMPTY_FORM)
+    setFieldErrors({})
+    setSheetOpen(true)
+  }
+
   const handleSubmit = async () => {
     setSaving(true)
     setFieldErrors({})
     try {
-      await createDoctor({ ...formData, active: true })
-      toast({
-        title: 'Sucesso',
-        description: 'Médico cadastrado com sucesso.',
-      })
+      if (editingId) {
+        await updateDoctor(editingId, formData)
+        toast({ title: 'Sucesso', description: 'Médico atualizado com sucesso.' })
+      } else {
+        await createDoctor({ ...formData, active: true })
+        toast({ title: 'Sucesso', description: 'Médico cadastrado com sucesso.' })
+      }
       setFormData(EMPTY_FORM)
+      setEditingId(null)
       setSheetOpen(false)
       await loadDoctors()
     } catch (err) {
@@ -137,6 +162,7 @@ export default function DoctorsPage() {
     setSheetOpen(open)
     if (!open) {
       setFormData(EMPTY_FORM)
+      setEditingId(null)
       setFieldErrors({})
     }
   }
@@ -151,16 +177,16 @@ export default function DoctorsPage() {
         {isAdmin && (
           <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
             <SheetTrigger asChild>
-              <Button>
+              <Button onClick={openCreate}>
                 <Plus className="mr-2 h-4 w-4" /> Novo Médico
               </Button>
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
               <SheetHeader className="mb-6">
-                <SheetTitle>Cadastrar Médico</SheetTitle>
+                <SheetTitle>{editingId ? 'Editar Médico' : 'Cadastrar Médico'}</SheetTitle>
                 <SheetDescription>
-                  Preencha as informações para registrar um novo profissional. Os dados são
-                  preservados ao trocar de aba.
+                  Preencha as informações do profissional. Os dados são preservados ao trocar de
+                  aba.
                 </SheetDescription>
               </SheetHeader>
               <Tabs defaultValue="pessoal" className="w-full">
@@ -227,12 +253,21 @@ export default function DoctorsPage() {
                       <p className="text-sm text-destructive">{fieldErrors.specialty}</p>
                     )}
                   </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Status do Médico</Label>
+                    <Switch
+                      checked={formData.active}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, active: checked }))
+                      }
+                    />
+                  </div>
                 </TabsContent>
               </Tabs>
               <div className="mt-6 flex justify-end">
                 <Button onClick={handleSubmit} disabled={saving}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Salvar Médico
+                  {editingId ? 'Salvar Alterações' : 'Salvar Médico'}
                 </Button>
               </div>
             </SheetContent>
@@ -297,16 +332,21 @@ export default function DoctorsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {isAdmin && (
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(doc)}>
                               <Edit className="mr-2 h-4 w-4" /> Editar
                             </DropdownMenuItem>
                           )}
                           {isAdmin && doc.active && (
+                            <DropdownMenuItem onClick={() => handleSoftDelete(doc.id)}>
+                              <Trash2 className="mr-2 h-4 w-4" /> Inativar
+                            </DropdownMenuItem>
+                          )}
+                          {isAdmin && (
                             <DropdownMenuItem
                               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                              onClick={() => handleSoftDelete(doc.id)}
+                              onClick={() => handleHardDelete(doc.id)}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" /> Inativar (Soft Delete)
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir Permanentemente
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
