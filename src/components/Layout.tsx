@@ -3,6 +3,7 @@ import {
   SidebarProvider,
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
@@ -26,7 +27,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import logoUrl from '@/assets/geminigeneratedimage5b1iqv5b1iqv5b1i-49736.png'
+import logoUrl from '@/assets/geminigeneratedimagel0e5l0l0e5l0l0e5-7b51d.png'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -70,12 +71,12 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <Sidebar className="shadow-elevation border-r border-sidebar-border">
-        <SidebarHeader className="h-24 flex items-center justify-center border-b border-sidebar-border px-6 py-3 shrink-0">
+        <SidebarHeader className="h-28 flex items-center justify-center border-b border-sidebar-border px-6 py-4 shrink-0 bg-transparent">
           <Link to="/" className="flex items-center justify-center w-full h-full">
             <img
               src={logoUrl}
               alt="DrGestorClin Logo"
-              className="max-h-20 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-105"
+              className="max-h-24 w-auto max-w-full object-contain transition-transform duration-300 hover:scale-105"
             />
           </Link>
         </SidebarHeader>
@@ -101,6 +102,19 @@ export default function Layout() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarFooter className="p-4 border-t border-sidebar-border">
+          <div className="text-xs text-center text-muted-foreground">
+            Powered by{' '}
+            <a
+              href="https://www.drgestorclin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold hover:underline"
+            >
+              www.drgestorclin.com
+            </a>
+          </div>
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-4 lg:px-6">
@@ -143,7 +157,7 @@ export default function Layout() {
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 overflow-auto bg-brand-green-light p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-auto bg-brand-green-light p-4 md:p-6 lg:p-8 transition-colors">
           <Outlet />
         </main>
       </SidebarInset>

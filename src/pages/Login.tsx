@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
-import logoUrl from '@/assets/geminigeneratedimage5b1iqv5b1iqv5b1i-49736.png'
+import logoUrl from '@/assets/geminigeneratedimagel0e5l0l0e5l0l0e5-7b51d.png'
 
 export default function LoginPage() {
   const { signIn, isAuthenticated } = useAuth()
@@ -37,8 +37,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="flex justify-center mb-2">
-            <img src={logoUrl} alt="DrGestorClin Logo" className="h-24 object-contain" />
+          <div className="flex justify-center mb-4">
+            <img
+              src={logoUrl}
+              alt="DrGestorClin Logo"
+              className="h-32 object-contain bg-transparent"
+            />
           </div>
           <p className="text-muted-foreground">Faça login para acessar o sistema</p>
         </div>
@@ -77,6 +81,16 @@ export default function LoginPage() {
         <p className="text-xs text-center text-muted-foreground">
           Use o e-mail e senha fornecidos pela administração.
         </p>
+        <div className="text-center mt-8 text-sm text-muted-foreground">
+          <a
+            href="https://www.drgestorclin.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline hover:text-primary transition-colors"
+          >
+            www.drgestorclin.com
+          </a>
+        </div>
       </div>
     </div>
   )
