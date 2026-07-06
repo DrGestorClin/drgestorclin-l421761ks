@@ -18,6 +18,7 @@ interface AuthContextType {
   doctorId: string | null
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
+  signInWith: (provider: string) => Promise<{ error: any }>
   signOut: () => void
   loading: boolean
 }
@@ -82,6 +83,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const signInWith = async (provider: string) => {
+    try {
+      await pb.collection('users').authWithOAuth2({ provider })
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
+  }
+
   const signOut = () => {
     pb.authStore.clear()
   }
@@ -100,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         doctorId,
         signIn,
         signUp,
+        signInWith,
         signOut,
         loading,
       }}

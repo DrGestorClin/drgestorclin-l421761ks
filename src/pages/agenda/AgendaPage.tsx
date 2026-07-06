@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getDoctors, type Doctor } from '@/services/doctors'
-import { getPatients, type Patient } from '@/services/patients'
+import { getPatients, getPatientsByDoctor, type Patient } from '@/services/patients'
 import {
   getAppointmentsByDoctor,
   createAppointment,
@@ -56,6 +56,7 @@ const formatTime = (iso: string) => {
 
 export default function AgendaPage() {
   const { toast } = useToast()
+  const { isDoctor, doctorId } = useAuth()
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [patients, setPatients] = useState<Patient[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
@@ -74,18 +75,25 @@ export default function AgendaPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [doctorData, patientData] = await Promise.all([getDoctors(), getPatients()])
+      const doctorData = await getDoctors()
       setDoctors(doctorData as Doctor[])
-      setPatients(patientData as Patient[])
-      if (doctorData.length > 0 && !selectedDoctor) {
-        setSelectedDoctor(doctorData[0].id)
+      if (isDoctor && doctorId) {
+        setSelectedDoctor(doctorId)
+        const patientData = await getPatientsByDoctor(doctorId)
+        setPatients(patientData as Patient[])
+      } else {
+        const patientData = await getPatients()
+        setPatients(patientData as Patient[])
+        if (doctorData.length > 0 && !selectedDoctor) {
+          setSelectedDoctor(doctorData[0].id)
+        }
       }
     } catch {
       toast({ title: 'Erro', description: 'Falha ao carregar dados.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [toast, selectedDoctor])
+  }, [toast, selectedDoctor, isDoctor, doctorId])
 
   const loadAppointments = useCallback(async () => {
     if (!selectedDoctor) return
@@ -157,7 +165,7 @@ export default function AgendaPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+          <Select value={selectedDoctor} onValueChange={setSelectedDoctor} disabled={isDoctor}>
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="Selecione o médico" />
             </SelectTrigger>
