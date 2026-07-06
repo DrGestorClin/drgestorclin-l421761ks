@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   SidebarProvider,
   Sidebar,
@@ -23,23 +23,48 @@ import {
   Settings,
   Search,
   Bell,
-  CircleUser,
+  LogOut,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useAuth } from '@/hooks/use-auth'
 
 const NAV_ITEMS = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Agenda', url: '/agenda', icon: CalendarIcon },
   { title: 'Pacientes', url: '/patients', icon: Users },
   { title: 'Médicos', url: '/doctors', icon: UserRound },
-  { title: 'Fornecedores (V2)', url: '#', icon: BriefcaseMedical },
-  { title: 'Financeiro (V2)', url: '#', icon: Wallet },
+  { title: 'Fornecedores', url: '#', icon: BriefcaseMedical },
+  { title: 'Financeiro', url: '#', icon: Wallet },
   { title: 'Configurações', url: '#', icon: Settings },
 ]
 
 export default function Layout() {
   const location = useLocation()
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSignOut = () => {
+    signOut()
+    navigate('/login')
+  }
+
+  const initials =
+    user?.name
+      ?.split(' ')
+      .map((n: string) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'U'
 
   return (
     <SidebarProvider>
@@ -89,10 +114,25 @@ export default function Layout() {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
             </Button>
-            <Button variant="ghost" className="gap-2">
-              <CircleUser className="h-5 w-5" />
-              <span className="hidden md:inline font-medium text-sm">Clínica Central</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:inline font-medium text-sm">
+                    {user?.name || 'Usuário'}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         <main className="flex-1 overflow-auto bg-slate-50 p-4 md:p-6">
