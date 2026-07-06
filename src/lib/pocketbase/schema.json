@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T19:09:57.552Z",
+  "generatedAt": "2026-07-06T19:20:38.418Z",
   "collections": [
     {
       "name": "users",
@@ -114,6 +114,65 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_doctors_crm ON doctors (crm)"]
+    },
+    {
+      "name": "patients",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "birth_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "doctor",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "doctors"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_patients_doctor ON patients (doctor)"]
     }
   ]
 }
