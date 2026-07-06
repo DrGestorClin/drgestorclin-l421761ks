@@ -19,6 +19,9 @@ export const getPatients = async (): Promise<Patient[]> =>
     sort: '-created',
   })
 
+export const getPatient = async (id: string): Promise<Patient> =>
+  pb.collection('patients').getOne(id, { expand: 'doctor' })
+
 export const createPatient = async (data: {
   name: string
   birth_date?: string

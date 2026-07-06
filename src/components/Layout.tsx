@@ -25,6 +25,7 @@ import {
   Search,
   Bell,
   LogOut,
+  FileText,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import logoUrl from '@/assets/geminigeneratedimagel0e5l0l0e5l0l0e5-7b51d.png'
@@ -45,6 +46,7 @@ const NAV_ITEMS = [
   { title: 'Agenda', url: '/agenda', icon: CalendarIcon },
   { title: 'Pacientes', url: '/patients', icon: Users },
   { title: 'Médicos', url: '/doctors', icon: UserRound },
+  { title: 'Modelos', url: '/templates', icon: FileText },
   { title: 'Fornecedores', url: '#', icon: BriefcaseMedical },
   { title: 'Financeiro', url: '#', icon: Wallet },
   { title: 'Configurações', url: '#', icon: Settings },

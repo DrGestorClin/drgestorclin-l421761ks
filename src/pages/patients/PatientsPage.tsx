@@ -17,9 +17,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Search, UserCircle } from 'lucide-react'
 import { PatientFormSheet } from '@/components/patient-form-sheet'
 import { useToast } from '@/hooks/use-toast'
+import { useNavigate } from 'react-router-dom'
 
 export default function PatientsPage() {
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [patients, setPatients] = useState<Patient[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [search, setSearch] = useState('')
@@ -101,7 +103,11 @@ export default function PatientsPage() {
                   </TableRow>
                 ))
               : filtered.map((p) => (
-                  <TableRow key={p.id}>
+                  <TableRow
+                    key={p.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => navigate(`/patients/${p.id}`)}
+                  >
                     <TableCell className="flex items-center gap-3">
                       <Avatar className="h-8 w-8 border">
                         <AvatarImage

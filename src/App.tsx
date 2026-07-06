@@ -9,6 +9,8 @@ import DoctorsPage from './pages/doctors/DoctorsPage'
 import PatientsPage from './pages/patients/PatientsPage'
 import AgendaPage from './pages/agenda/AgendaPage'
 import ConsultationPage from './pages/consultation/ConsultationPage'
+import PatientDetailPage from './pages/patients/PatientDetailPage'
+import TemplatesPage from './pages/templates/TemplatesPage'
 import LoginPage from './pages/Login'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
@@ -26,6 +28,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/doctors" element={<DoctorsPage />} />
               <Route path="/patients" element={<PatientsPage />} />
+              <Route path="/patients/:id" element={<PatientDetailPage />} />
+              <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
               <Route path="/consultation/:id" element={<ConsultationPage />} />
             </Route>
