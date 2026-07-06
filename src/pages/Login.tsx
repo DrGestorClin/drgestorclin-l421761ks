@@ -4,8 +4,9 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BriefcaseMedical, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import logoUrl from '@/assets/geminigeneratedimage5b1iqv5b1iqv5b1i-49736.png'
 
 export default function LoginPage() {
   const { signIn, isAuthenticated } = useAuth()
@@ -36,10 +37,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <BriefcaseMedical className="h-12 w-12 text-primary" />
+          <div className="flex justify-center mb-2">
+            <img src={logoUrl} alt="DrGestorClin Logo" className="h-24 object-contain" />
           </div>
-          <h1 className="text-2xl font-bold">DrGestorClin</h1>
           <p className="text-muted-foreground">Faça login para acessar o sistema</p>
         </div>
         <form

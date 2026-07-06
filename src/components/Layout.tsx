@@ -26,6 +26,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import logoUrl from '@/assets/geminigeneratedimage5b1iqv5b1iqv5b1i-49736.png'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -69,11 +70,10 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="h-16 flex items-center justify-center border-b px-4">
-          <span className="text-xl font-bold text-primary flex items-center gap-2 w-full">
-            <BriefcaseMedical className="h-6 w-6" />
-            <span className="truncate">DrGestorClin</span>
-          </span>
+        <SidebarHeader className="h-16 flex items-center justify-center border-b px-4 py-2">
+          <Link to="/" className="flex items-center justify-center w-full h-full">
+            <img src={logoUrl} alt="DrGestorClin Logo" className="h-full object-contain" />
+          </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
