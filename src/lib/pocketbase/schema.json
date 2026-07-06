@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T22:51:18.332Z",
+  "generatedAt": "2026-07-06T22:58:43.759Z",
   "collections": [
     {
       "name": "users",
@@ -129,8 +129,8 @@
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
         "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "update": "@request.auth.role = \"admin\" || doctor = @request.auth.doctor_ref",
+        "delete": "@request.auth.role = \"admin\""
       },
       "fields": [
         {
@@ -177,6 +177,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "photo",
+          "type": "file",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_patients_doctor ON patients (doctor)"]
@@ -276,6 +282,86 @@
       "indexes": [
         "CREATE INDEX idx_medical_records_patient ON medical_records (patient)",
         "CREATE INDEX idx_medical_records_doctor ON medical_records (doctor)"
+      ]
+    },
+    {
+      "name": "appointments",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.role = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "patient",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "patients"
+        },
+        {
+          "name": "doctor",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "doctors"
+        },
+        {
+          "name": "start_time",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "end_time",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Agendado",
+            "Confirmado",
+            "Aguardando",
+            "Em Atendimento",
+            "Finalizado",
+            "Cancelado",
+            "Falta"
+          ]
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Consulta", "Retorno", "Procedimento"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_appointments_doctor ON appointments (doctor)",
+        "CREATE INDEX idx_appointments_patient ON appointments (patient)",
+        "CREATE INDEX idx_appointments_start_time ON appointments (start_time)"
       ]
     }
   ]
