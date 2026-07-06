@@ -52,6 +52,10 @@
     --chart-3: 38 92% 50%;
     --chart-4: 347 77% 50%;
     --chart-5: 283 39% 53%;
+
+    --brand-green: 158 64% 42%;
+    --brand-green-light: 152 50% 95%;
+    --brand-green-dark: 158 64% 32%;
   }
 
   .dark {
@@ -91,6 +95,10 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 222.2 84% 4.9%;
     --sidebar-ring: 216 100% 60%;
+
+    --brand-green: 158 64% 50%;
+    --brand-green-light: 160 30% 12%;
+    --brand-green-dark: 158 64% 40%;
   }
 
   section[aria-label='Notifications alt+T'] {
@@ -152,5 +160,17 @@
   }
   .animate-slide-in {
     animation: slide-in 0.3s ease-out forwards;
+  }
+
+  .nav-menu-button span {
+    transition:
+      font-weight 200ms ease,
+      color 200ms ease;
+  }
+  .nav-menu-button:hover span {
+    font-weight: 700;
+  }
+  .nav-menu-button[data-active='true'] span {
+    font-weight: 700;
   }
 }

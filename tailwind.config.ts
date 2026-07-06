@@ -81,6 +81,11 @@ export default {
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
         },
+        brand: {
+          green: 'hsl(var(--brand-green))',
+          'green-light': 'hsl(var(--brand-green-light))',
+          'green-dark': 'hsl(var(--brand-green-dark))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
