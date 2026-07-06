@@ -134,13 +134,29 @@ export default function DoctorsPage() {
   const handleSubmit = async () => {
     setSaving(true)
     setFieldErrors({})
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!formData.email.trim()) {
+      setFieldErrors({ email: 'E-mail é obrigatório.' })
+      setSaving(false)
+      return
+    }
+    if (!emailRegex.test(formData.email)) {
+      setFieldErrors({ email: 'Formato de e-mail inválido.' })
+      setSaving(false)
+      return
+    }
+
     try {
       if (editingId) {
         await updateDoctor(editingId, formData)
         toast({ title: 'Sucesso', description: 'Médico atualizado com sucesso.' })
       } else {
         await createDoctor({ ...formData, active: true })
-        toast({ title: 'Sucesso', description: 'Médico cadastrado com sucesso.' })
+        toast({
+          title: 'Sucesso',
+          description: `Cadastro realizado com sucesso. Um email de boas-vindas foi enviado para ${formData.email}.`,
+        })
       }
       setFormData(EMPTY_FORM)
       setEditingId(null)

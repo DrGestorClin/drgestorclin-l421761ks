@@ -5,7 +5,10 @@ onRecordAfterCreateSuccess((e) => {
   const name = doctor.getString('name')
   const doctorId = doctor.id
 
-  const tempPassword = $security.randomString(16)
+  const siteUrl = $secrets.get('SITE_URL') || 'https://drgestorclin-52167.goskip.app'
+
+  let tempPassword = ''
+  let userCreated = false
 
   if (email) {
     let userExists = false
@@ -15,6 +18,7 @@ onRecordAfterCreateSuccess((e) => {
     } catch (_) {}
 
     if (!userExists) {
+      tempPassword = $security.randomString(16)
       try {
         const usersCol = $app.findCollectionByNameOrId('_pb_users_auth_')
         const userRecord = new Record(usersCol)
@@ -25,50 +29,79 @@ onRecordAfterCreateSuccess((e) => {
         userRecord.set('role', 'doctor')
         userRecord.set('doctor_ref', doctorId)
         $app.save(userRecord)
+        userCreated = true
         $app.logger().info('User account created for doctor', 'email', email, 'doctor_id', doctorId)
-
-        const sendgridKey = $secrets.get('SENDGRID_API_KEY')
-        if (sendgridKey) {
-          try {
-            $http.send({
-              url: 'https://api.sendgrid.com/v3/mail/send',
-              method: 'POST',
-              headers: {
-                Authorization: 'Bearer ' + sendgridKey,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                personalizations: [{ to: [{ email: email }] }],
-                from: { email: 'm.bruno.f@gmail.com', name: 'DrGestorClin' },
-                subject: 'Bem-vindo ao DrGestorClin - Sua Conta de Acesso',
-                content: [
-                  {
-                    type: 'text/plain',
-                    value: `Olá Dr(a). ${name},\n\nSua conta de acesso ao DrGestorClin foi criada com sucesso!\n\nDetalhes de acesso:\nE-mail: ${email}\nSenha temporária: ${tempPassword}\nURL de acesso: https://www.drgestorclin.com\n\nPor segurança, recomendamos que você altere sua senha após o primeiro login.\n\nAtenciosamente,\nEquipe DrGestorClin`,
-                  },
-                ],
-              }),
-            })
-            $app.logger().info('Welcome email with credentials sent to doctor', 'email', email)
-          } catch (err) {
-            $app.logger().error('Failed to send welcome email to doctor', 'error', err.message)
-          }
-        }
       } catch (err) {
         $app.logger().error('Failed to create user account for doctor', 'error', err.message)
       }
     } else {
       $app.logger().info('User account already exists for doctor email', 'email', email)
     }
+
+    try {
+      var emailText
+      var emailHtml
+      if (userCreated) {
+        emailText =
+          'Olá Dr(a). ' +
+          name +
+          ',\n\nSua conta de acesso ao DrGestorClin foi criada com sucesso!\n\nDetalhes de acesso:\nE-mail: ' +
+          email +
+          '\nSenha temporária: ' +
+          tempPassword +
+          '\nURL de acesso: ' +
+          siteUrl +
+          '\n\nPor segurança, recomendamos que você altere sua senha após o primeiro login.\n\nAtenciosamente,\nEquipe DrGestorClin'
+        emailHtml =
+          '<p>Olá Dr(a). ' +
+          name +
+          ',</p><p>Sua conta de acesso ao DrGestorClin foi criada com sucesso!</p><p><strong>Detalhes de acesso:</strong><br/>E-mail: ' +
+          email +
+          '<br/>Senha temporária: ' +
+          tempPassword +
+          '<br/>URL de acesso: <a href="' +
+          siteUrl +
+          '">' +
+          siteUrl +
+          '</a></p><p>Por segurança, recomendamos que você altere sua senha após o primeiro login.</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
+      } else {
+        emailText =
+          'Olá Dr(a). ' +
+          name +
+          ',\n\nBem-vindo ao DrGestorClin! Seu cadastro foi realizado com sucesso.\n\nURL de acesso: ' +
+          siteUrl +
+          '\n\nAtenciosamente,\nEquipe DrGestorClin'
+        emailHtml =
+          '<p>Olá Dr(a). ' +
+          name +
+          ',</p><p>Bem-vindo ao DrGestorClin! Seu cadastro foi realizado com sucesso.</p><p>URL de acesso: <a href="' +
+          siteUrl +
+          '">' +
+          siteUrl +
+          '</a></p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
+      }
+
+      var message = new Mail({
+        from: { address: 'noreply@drgestorclin.com', name: 'DrGestorClin' },
+        to: [{ address: email }],
+        subject: 'Bem-vindo ao DrGestorClin - Sua Conta de Acesso',
+        text: emailText,
+        html: emailHtml,
+      })
+      $app.newMailClient().send(message)
+      $app.logger().info('Onboarding email sent to doctor via internal mailer', 'email', email)
+    } catch (err) {
+      $app.logger().error('Failed to send onboarding email to doctor', 'error', err.message)
+    }
   }
 
-  const waToken = $secrets.get('WHATSAPP_TOKEN')
-  const waPhoneId = $secrets.get('WHATSAPP_PHONE_ID')
+  var waToken = $secrets.get('WHATSAPP_TOKEN')
+  var waPhoneId = $secrets.get('WHATSAPP_PHONE_ID')
   if (waToken && waPhoneId && phone) {
     try {
-      const cleanPhone = phone.replace(/\D/g, '')
+      var cleanPhone = phone.replace(/\D/g, '')
       $http.send({
-        url: `https://graph.facebook.com/v17.0/${waPhoneId}/messages`,
+        url: 'https://graph.facebook.com/v17.0/' + waPhoneId + '/messages',
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + waToken,
@@ -79,7 +112,10 @@ onRecordAfterCreateSuccess((e) => {
           to: cleanPhone,
           type: 'text',
           text: {
-            body: `Olá Dr(a). ${name}, bem-vindo ao DrGestorClin! Sua conta de acesso foi criada. Verifique seu e-mail para obter a senha temporária. Acesse: https://www.drgestorclin.com`,
+            body:
+              'Olá Dr(a). ' +
+              name +
+              ', bem-vindo ao DrGestorClin! Sua conta de acesso foi criada. Verifique seu e-mail para obter a senha temporária.',
           },
         }),
       })

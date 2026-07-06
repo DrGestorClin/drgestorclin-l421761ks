@@ -89,6 +89,14 @@ export function PatientFormSheet({
   const handleSubmit = async () => {
     setSaving(true)
     setFieldErrors({})
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (formData.email && !emailRegex.test(formData.email)) {
+      setFieldErrors({ email: 'Formato de e-mail inválido.' })
+      setSaving(false)
+      return
+    }
+
     try {
       const data = {
         name: formData.name,
@@ -103,7 +111,12 @@ export function PatientFormSheet({
         toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso.' })
       } else {
         await createPatient(data)
-        toast({ title: 'Sucesso', description: 'Paciente cadastrado com sucesso.' })
+        toast({
+          title: 'Sucesso',
+          description: formData.email
+            ? `Cadastro realizado com sucesso. Um email de boas-vindas foi enviado para ${formData.email}.`
+            : 'Paciente cadastrado com sucesso.',
+        })
       }
       onOpenChange(false)
       onSuccess()
