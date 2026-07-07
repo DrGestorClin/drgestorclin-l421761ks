@@ -45,7 +45,7 @@ const NAV_ITEMS = [
   { title: 'Pacientes', url: '/patients', icon: Users },
   { title: 'Médicos', url: '/doctors', icon: UserRound },
   { title: 'Modelos', url: '/templates', icon: FileText },
-  { title: 'Configurações', url: '#', icon: Settings },
+  { title: 'Configurações', url: '/settings', icon: Settings },
 ]
 
 export default function Layout() {

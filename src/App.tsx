@@ -11,6 +11,7 @@ import AgendaPage from './pages/agenda/AgendaPage'
 import ConsultationPage from './pages/consultation/ConsultationPage'
 import PatientDetailPage from './pages/patients/PatientDetailPage'
 import TemplatesPage from './pages/templates/TemplatesPage'
+import SettingsPage from './pages/settings/SettingsPage'
 import LoginPage from './pages/Login'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/patients" element={<PatientsPage />} />
               <Route path="/patients/:id" element={<PatientDetailPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
               <Route path="/consultation/:id" element={<ConsultationPage />} />
             </Route>

@@ -8,6 +8,7 @@ export interface Doctor {
   email: string
   phone: string
   active: boolean
+  email_status?: string
   created: string
   updated: string
 }
@@ -32,6 +33,8 @@ export const updateDoctor = async (id: string, data: Partial<Doctor>): Promise<D
 
 export const softDeleteDoctor = async (id: string): Promise<Doctor> =>
   pb.collection('doctors').update(id, { active: false })
+
+export const getDoctor = async (id: string): Promise<Doctor> => pb.collection('doctors').getOne(id)
 
 export const getAllDoctors = async (): Promise<Doctor[]> =>
   pb.collection('doctors').getFullList({

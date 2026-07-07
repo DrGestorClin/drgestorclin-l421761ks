@@ -9,6 +9,7 @@ export interface Patient {
   phone: string
   doctor: string
   photo?: string
+  email_status?: string
   created: string
   updated: string
   expand?: { doctor?: Doctor }

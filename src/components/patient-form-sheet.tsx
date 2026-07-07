@@ -20,7 +20,13 @@ import {
 import { Loader2, ImageIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
-import { createPatient, updatePatient, getPatientPhotoUrl, type Patient } from '@/services/patients'
+import {
+  createPatient,
+  updatePatient,
+  getPatient,
+  getPatientPhotoUrl,
+  type Patient,
+} from '@/services/patients'
 import type { Doctor } from '@/services/doctors'
 
 const EMPTY_FORM = { name: '', birth_date: '', email: '', phone: '', doctor: '' }
@@ -110,13 +116,32 @@ export function PatientFormSheet({
         await updatePatient(patient.id, data)
         toast({ title: 'Sucesso', description: 'Paciente atualizado com sucesso.' })
       } else {
-        await createPatient(data)
-        toast({
-          title: 'Sucesso',
-          description: formData.email
-            ? `Cadastro realizado com sucesso. Um email de boas-vindas foi enviado para ${formData.email}.`
-            : 'Paciente cadastrado com sucesso.',
-        })
+        const created = await createPatient(data)
+        if (formData.email) {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          try {
+            const updated = await getPatient(created.id)
+            if (updated.email_status === 'sent') {
+              toast({
+                title: 'Sucesso',
+                description: 'Cadastro realizado e e-mail de boas-vindas enviado!',
+              })
+            } else if (updated.email_status === 'failed') {
+              toast({
+                title: 'Atenção',
+                description:
+                  'Cadastro realizado, mas houve um erro ao enviar o e-mail. Verifique as configurações de SMTP.',
+                variant: 'destructive',
+              })
+            } else {
+              toast({ title: 'Sucesso', description: 'Paciente cadastrado com sucesso.' })
+            }
+          } catch {
+            toast({ title: 'Sucesso', description: 'Paciente cadastrado com sucesso.' })
+          }
+        } else {
+          toast({ title: 'Sucesso', description: 'Paciente cadastrado com sucesso.' })
+        }
       }
       onOpenChange(false)
       onSuccess()

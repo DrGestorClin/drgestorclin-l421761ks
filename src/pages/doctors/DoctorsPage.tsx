@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import {
   getAllDoctors,
+  getDoctor,
   createDoctor,
   updateDoctor,
   softDeleteDoctor,
@@ -152,11 +153,28 @@ export default function DoctorsPage() {
         await updateDoctor(editingId, formData)
         toast({ title: 'Sucesso', description: 'Médico atualizado com sucesso.' })
       } else {
-        await createDoctor({ ...formData, active: true })
-        toast({
-          title: 'Sucesso',
-          description: `Cadastro realizado com sucesso. Um email de boas-vindas foi enviado para ${formData.email}.`,
-        })
+        const created = await createDoctor({ ...formData, active: true })
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        try {
+          const updated = await getDoctor(created.id)
+          if (updated.email_status === 'sent') {
+            toast({
+              title: 'Sucesso',
+              description: 'Cadastro realizado e e-mail de boas-vindas enviado!',
+            })
+          } else if (updated.email_status === 'failed') {
+            toast({
+              title: 'Atenção',
+              description:
+                'Cadastro realizado, mas houve um erro ao enviar o e-mail. Verifique as configurações de SMTP.',
+              variant: 'destructive',
+            })
+          } else {
+            toast({ title: 'Sucesso', description: 'Cadastro realizado com sucesso.' })
+          }
+        } catch {
+          toast({ title: 'Sucesso', description: 'Cadastro realizado com sucesso.' })
+        }
       }
       setFormData(EMPTY_FORM)
       setEditingId(null)

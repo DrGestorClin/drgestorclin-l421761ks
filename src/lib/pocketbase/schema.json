@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T23:40:42.457Z",
+  "generatedAt": "2026-07-07T01:52:29.832Z",
   "collections": [
     {
       "name": "users",
@@ -118,6 +118,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "email_status",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_doctors_crm ON doctors (crm)"]
@@ -181,6 +187,12 @@
         {
           "name": "photo",
           "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email_status",
+          "type": "text",
           "required": false,
           "system": false
         }
