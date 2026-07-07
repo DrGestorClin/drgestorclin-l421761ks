@@ -62,7 +62,7 @@ export default function AgendaPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [selectedDoctor, setSelectedDoctor] = useState('')
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [view, setView] = useState<'dia' | 'lista'>('dia')
+  const [view, setView] = useState<'dia' | 'lista' | 'mes'>('mes')
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -120,9 +120,111 @@ export default function AgendaPage() {
       ? appointments.filter((a) => isSameDay(new Date(a.start_time), selectedDate))
       : appointments
 
-  const prevDay = () => setSelectedDate(new Date(selectedDate.getTime() - 86400000))
-  const nextDay = () => setSelectedDate(new Date(selectedDate.getTime() + 86400000))
+  const prevDate = () => {
+    if (view === 'mes') {
+      setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))
+    } else {
+      setSelectedDate(new Date(selectedDate.getTime() - 86400000))
+    }
+  }
+  const nextDate = () => {
+    if (view === 'mes') {
+      setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))
+    } else {
+      setSelectedDate(new Date(selectedDate.getTime() + 86400000))
+    }
+  }
   const goToday = () => setSelectedDate(new Date())
+
+  const renderMonthView = () => {
+    const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+    const monthEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+
+    const startDate = new Date(monthStart)
+    startDate.setDate(startDate.getDate() - startDate.getDay())
+
+    const endDate = new Date(monthEnd)
+    if (endDate.getDay() !== 6) {
+      endDate.setDate(endDate.getDate() + (6 - endDate.getDay()))
+    }
+
+    const days = []
+    let d = new Date(startDate)
+    while (d <= endDate) {
+      days.push(new Date(d))
+      d.setDate(d.getDate() + 1)
+    }
+
+    const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+    return (
+      <div className="flex flex-col h-full bg-white rounded-md border shadow-sm overflow-hidden animate-fade-in">
+        <div className="grid grid-cols-7 border-b bg-slate-50">
+          {weekDays.map((day) => (
+            <div key={day} className="py-2 text-center text-sm font-semibold text-slate-500">
+              {day}
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 grid grid-cols-7 auto-rows-fr bg-slate-100 gap-px border-b">
+          {days.map((day, i) => {
+            const isCurrentMonth = day.getMonth() === selectedDate.getMonth()
+            const isCurrentDay = isSameDay(day, new Date())
+            const dayApts = appointments.filter((a) => isSameDay(new Date(a.start_time), day))
+
+            return (
+              <div
+                key={i}
+                className={cn(
+                  'min-h-[100px] p-1.5 flex flex-col gap-1 transition-colors hover:bg-slate-50 cursor-pointer overflow-hidden bg-white',
+                  !isCurrentMonth && 'bg-slate-50/50',
+                  isCurrentDay && 'bg-brand-military/5 ring-1 ring-inset ring-brand-military/20',
+                )}
+                onClick={() => {
+                  setSelectedDate(day)
+                  setView('dia')
+                }}
+              >
+                <div className="flex justify-between items-center px-1 mb-1">
+                  <span
+                    className={cn(
+                      'text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full',
+                      isCurrentDay
+                        ? 'bg-brand-forest text-white'
+                        : !isCurrentMonth
+                          ? 'text-slate-400'
+                          : 'text-slate-700',
+                    )}
+                  >
+                    {day.getDate()}
+                  </span>
+                  {dayApts.length > 0 && (
+                    <span className="text-xs text-brand-forest/70 font-semibold hidden sm:inline-block">
+                      {dayApts.length} cons.
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-1 no-scrollbar">
+                  {dayApts.map((apt) => (
+                    <div
+                      key={apt.id}
+                      className={cn(
+                        'text-[10px] sm:text-xs px-1.5 py-0.5 rounded text-white truncate shadow-sm font-medium',
+                        STATUS_COLORS[apt.status] || 'bg-slate-400',
+                      )}
+                    >
+                      <span className="font-bold mr-1">{formatTime(apt.start_time)}</span>
+                      {apt.expand?.patient?.name.split(' ')[0]}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
   const handleWhatsApp = () => {
     toast({ title: 'WhatsApp Enviado', description: 'Lembrete de consulta enviado com sucesso.' })
@@ -257,99 +359,112 @@ export default function AgendaPage() {
       <div className="bg-white rounded-md border shadow-sm flex-1 flex flex-col overflow-hidden">
         <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
           <div className="flex items-center gap-2 self-center sm:self-auto">
-            <Button variant="outline" size="icon" className="bg-white" onClick={prevDay}>
+            <Button variant="outline" size="icon" className="bg-white" onClick={prevDate}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="ghost" onClick={goToday}>
-              <span className="font-semibold text-lg min-w-[120px] text-center">
+              <span className="font-semibold text-lg min-w-[140px] text-center capitalize">
                 {view === 'dia'
                   ? selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-                  : 'Todos'}
+                  : view === 'mes'
+                    ? selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+                    : 'Todos'}
               </span>
             </Button>
-            <Button variant="outline" size="icon" className="bg-white" onClick={nextDay}>
+            <Button variant="outline" size="icon" className="bg-white" onClick={nextDate}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 bg-slate-100 p-1 rounded-md">
             <Button
-              variant={view === 'dia' ? 'default' : 'outline'}
+              variant={view === 'mes' ? 'default' : 'ghost'}
+              onClick={() => setView('mes')}
+              className={cn('h-8 px-4', view === 'mes' && 'bg-white shadow-sm text-brand-forest')}
+            >
+              Mês
+            </Button>
+            <Button
+              variant={view === 'dia' ? 'default' : 'ghost'}
               onClick={() => setView('dia')}
-              className={view !== 'dia' ? 'bg-white' : ''}
+              className={cn('h-8 px-4', view === 'dia' && 'bg-white shadow-sm text-brand-forest')}
             >
               Dia
             </Button>
             <Button
-              variant={view === 'lista' ? 'default' : 'outline'}
+              variant={view === 'lista' ? 'default' : 'ghost'}
               onClick={() => setView('lista')}
-              className={view !== 'lista' ? 'bg-white' : ''}
+              className={cn('h-8 px-4', view === 'lista' && 'bg-white shadow-sm text-brand-forest')}
             >
               Lista
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-50/30">
-          <div className="space-y-4 max-w-4xl mx-auto">
-            {loading ? (
-              <div className="text-center py-12 text-muted-foreground">Carregando agenda...</div>
-            ) : visibleAppointments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                  <FileText className="h-8 w-8 text-slate-400" />
+        <div className="flex-1 overflow-auto bg-slate-50/30">
+          {view === 'mes' ? (
+            <div className="h-full p-4 sm:p-6">{renderMonthView()}</div>
+          ) : (
+            <div className="p-4 sm:p-6 space-y-4 max-w-4xl mx-auto animate-fade-in">
+              {loading ? (
+                <div className="text-center py-12 text-muted-foreground">Carregando agenda...</div>
+              ) : visibleAppointments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-700">Agenda Livre</h3>
+                  <p className="text-slate-500 max-w-sm mt-2">
+                    Nenhum agendamento marcado para este médico
+                    {view === 'dia' ? ' na data selecionada' : ''}.
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-700">Agenda Livre</h3>
-                <p className="text-slate-500 max-w-sm mt-2">
-                  Nenhum agendamento marcado para este médico
-                  {view === 'dia' ? ' na data selecionada' : ''}.
-                </p>
-              </div>
-            ) : (
-              visibleAppointments.map((apt) => (
-                <div
-                  key={apt.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-xl border bg-white shadow-sm hover:shadow-md transition-all group"
-                >
-                  <div className="flex items-center gap-4 sm:w-32">
-                    <div
-                      className={cn(
-                        'h-4 w-4 rounded-full shadow-inner',
-                        STATUS_COLORS[apt.status] || 'bg-slate-400',
-                      )}
-                    />
-                    <span className="font-bold text-xl">{formatTime(apt.start_time)}</span>
-                  </div>
-                  <div className="flex-1 border-l-2 border-slate-100 pl-4 sm:border-l-0 sm:pl-0">
-                    <div className="font-bold text-lg text-slate-800">
-                      {apt.expand?.patient?.name || 'Paciente'}
+              ) : (
+                visibleAppointments.map((apt) => (
+                  <div
+                    key={apt.id}
+                    className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-xl border bg-white shadow-sm hover:shadow-md transition-all group"
+                  >
+                    <div className="flex items-center gap-4 sm:w-32">
+                      <div
+                        className={cn(
+                          'h-4 w-4 rounded-full shadow-inner',
+                          STATUS_COLORS[apt.status] || 'bg-slate-400',
+                        )}
+                      />
+                      <span className="font-bold text-xl">{formatTime(apt.start_time)}</span>
                     </div>
-                    <div className="text-sm font-medium text-slate-500 mt-1">
-                      {apt.type || 'Consulta'}
+                    <div className="flex-1 border-l-2 border-slate-100 pl-4 sm:border-l-0 sm:pl-0">
+                      <div className="font-bold text-lg text-slate-800">
+                        {apt.expand?.patient?.name || 'Paciente'}
+                      </div>
+                      <div className="text-sm font-medium text-slate-500 mt-1">
+                        {apt.type || 'Consulta'}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
+                      <Badge variant="secondary" className="mr-2 font-medium bg-slate-100">
+                        {apt.status}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleWhatsApp}
+                        title="Enviar WhatsApp"
+                        className="group-hover:border-emerald-200 group-hover:text-emerald-600 transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button asChild variant="default" size="icon" title="Abrir Prontuário">
+                        <Link to={`/patients/${apt.patient}`}>
+                          <FileText className="h-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
-                    <Badge variant="secondary" className="mr-2 font-medium bg-slate-100">
-                      {apt.status}
-                    </Badge>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleWhatsApp}
-                      title="Enviar WhatsApp"
-                      className="group-hover:border-emerald-200 group-hover:text-emerald-600 transition-colors"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
-                    <Button asChild variant="default" size="icon" title="Abrir Prontuário">
-                      <Link to={`/patients/${apt.patient}`}>
-                        <FileText className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
