@@ -4,6 +4,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { getDoctors, type Doctor } from '@/services/doctors'
 import { getPatients, getPatientsByDoctor, type Patient } from '@/services/patients'
 import {
+  getAppointments,
   getAppointmentsByDoctor,
   createAppointment,
   type Appointment,
@@ -263,6 +264,7 @@ export default function AgendaPage() {
       setDialogOpen(false)
       setFormData({
         patient: '',
+        doctor: isDoctor && doctorId ? doctorId : '',
         date: formatDateInput(selectedDate),
         time: '09:00',
         type: 'Consulta',
