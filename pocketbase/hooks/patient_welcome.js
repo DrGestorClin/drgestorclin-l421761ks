@@ -22,7 +22,7 @@ onRecordAfterCreateSuccess((e) => {
       settings.SMTP.Username = smtpUser
       settings.SMTP.Password = smtpPass
       settings.SMTP.Enabled = true
-      settings.SMTP.TLS = true
+      settings.SMTP.TLS = parseInt(smtpPort) === 465
       $app.save(settings)
     } catch (err) {
       $app.logger().error('Failed to configure SMTP settings', 'error', err.message)
@@ -40,14 +40,13 @@ onRecordAfterCreateSuccess((e) => {
         name +
         ',</p><p>Obrigado por se registrar no DrGestorClin. Sua saúde e bem-estar são nossas prioridades!</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
 
-      var message = new Mail({
+      $app.newMailClient().send({
         from: { address: smtpUser, name: 'DrGestorClin' },
         to: [{ address: email }],
         subject: 'Bem-vindo ao DrGestorClin',
         text: emailText,
         html: emailHtml,
       })
-      $app.newMailClient().send(message)
 
       try {
         var rec = $app.findRecordById('patients', patientId)

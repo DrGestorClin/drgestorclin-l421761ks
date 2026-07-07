@@ -36,21 +36,20 @@ routerAdd(
       settings.SMTP.Username = smtpUser
       settings.SMTP.Password = smtpPass
       settings.SMTP.Enabled = true
-      settings.SMTP.TLS = true
+      settings.SMTP.TLS = parseInt(smtpPort) === 465
       $app.save(settings)
     } catch (err) {
       $app.logger().error('Failed to configure SMTP settings', 'error', err.message)
     }
 
     try {
-      var message = new Mail({
+      $app.newMailClient().send({
         from: { address: smtpUser, name: 'DrGestorClin' },
         to: [{ address: toEmail }],
         subject: 'DrGestorClin - Teste de Configuração de E-mail',
         text: 'Este é um e-mail de teste do DrGestorClin.\n\nSe você recebeu esta mensagem, as configurações de SMTP estão funcionando corretamente.\n\nAtenciosamente,\nEquipe DrGestorClin',
         html: '<p>Este é um e-mail de teste do DrGestorClin.</p><p>Se você recebeu esta mensagem, as configurações de SMTP estão funcionando corretamente.</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>',
       })
-      $app.newMailClient().send(message)
       $app.logger().info('Test email sent successfully', 'to', toEmail)
       return e.json(200, {
         success: true,
