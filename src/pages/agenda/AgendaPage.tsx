@@ -68,10 +68,17 @@ export default function AgendaPage() {
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     patient: '',
+    doctor: '',
     date: formatDateInput(new Date()),
     time: '09:00',
     type: 'Consulta',
   })
+
+  useEffect(() => {
+    if (selectedDoctor && selectedDoctor !== 'all') {
+      setFormData((prev) => ({ ...prev, doctor: selectedDoctor }))
+    }
+  }, [selectedDoctor])
 
   const loadData = useCallback(async () => {
     try {
@@ -85,7 +92,7 @@ export default function AgendaPage() {
         const patientData = await getPatients()
         setPatients(patientData as Patient[])
         if (doctorData.length > 0 && !selectedDoctor) {
-          setSelectedDoctor(doctorData[0].id)
+          setSelectedDoctor('all')
         }
       }
     } catch {
@@ -98,8 +105,13 @@ export default function AgendaPage() {
   const loadAppointments = useCallback(async () => {
     if (!selectedDoctor) return
     try {
-      const data = await getAppointmentsByDoctor(selectedDoctor)
-      setAppointments(data as Appointment[])
+      if (selectedDoctor === 'all') {
+        const data = await getAppointments()
+        setAppointments(data as Appointment[])
+      } else {
+        const data = await getAppointmentsByDoctor(selectedDoctor)
+        setAppointments(data as Appointment[])
+      }
     } catch {
       setAppointments([])
     }
@@ -212,10 +224,15 @@ export default function AgendaPage() {
                         'text-[10px] sm:text-xs px-1.5 py-0.5 rounded text-white truncate shadow-sm font-medium',
                         STATUS_COLORS[apt.status] || 'bg-slate-400',
                       )}
-                      title={apt.expand?.patient?.name}
+                      title={`${apt.expand?.patient?.name} ${selectedDoctor === 'all' ? `(Dr. ${apt.expand?.doctor?.name})` : ''}`}
                     >
                       <span className="font-bold mr-1">{formatTime(apt.start_time)}</span>
                       {apt.expand?.patient?.name}
+                      {selectedDoctor === 'all' && apt.expand?.doctor?.name && (
+                        <span className="opacity-80 font-normal ml-1">
+                          - {apt.expand.doctor.name.split(' ')[0]}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -237,7 +254,7 @@ export default function AgendaPage() {
       const startTime = new Date(`${formData.date}T${formData.time}`).toISOString()
       await createAppointment({
         patient: formData.patient,
-        doctor: selectedDoctor,
+        doctor: formData.doctor,
         start_time: startTime,
         status: 'Agendado',
         type: formData.type,
@@ -273,6 +290,7 @@ export default function AgendaPage() {
               <SelectValue placeholder="Selecione o médico" />
             </SelectTrigger>
             <SelectContent>
+              {!isDoctor && <SelectItem value="all">Visão da Clínica (Todos)</SelectItem>}
               {doctors.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
@@ -291,23 +309,44 @@ export default function AgendaPage() {
                 <DialogTitle>Novo Agendamento</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Paciente</Label>
-                  <Select
-                    value={formData.patient}
-                    onValueChange={(v) => setFormData((prev) => ({ ...prev, patient: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {patients.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Paciente</Label>
+                    <Select
+                      value={formData.patient}
+                      onValueChange={(v) => setFormData((prev) => ({ ...prev, patient: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o paciente..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {patients.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Médico</Label>
+                    <Select
+                      value={formData.doctor}
+                      onValueChange={(v) => setFormData((prev) => ({ ...prev, doctor: v }))}
+                      disabled={isDoctor}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o médico..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {doctors.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -347,7 +386,7 @@ export default function AgendaPage() {
               <DialogFooter>
                 <Button
                   onClick={handleSubmit}
-                  disabled={saving || !formData.patient || !selectedDoctor}
+                  disabled={saving || !formData.patient || !formData.doctor}
                 >
                   Salvar Agendamento
                 </Button>
@@ -435,8 +474,13 @@ export default function AgendaPage() {
                       <span className="font-bold text-xl">{formatTime(apt.start_time)}</span>
                     </div>
                     <div className="flex-1 border-l-2 border-slate-100 pl-4 sm:border-l-0 sm:pl-0">
-                      <div className="font-bold text-lg text-slate-800">
+                      <div className="font-bold text-lg text-slate-800 flex items-center gap-2">
                         {apt.expand?.patient?.name || 'Paciente'}
+                        {selectedDoctor === 'all' && apt.expand?.doctor?.name && (
+                          <Badge variant="outline" className="text-xs bg-slate-50 font-normal">
+                            Dr(a). {apt.expand.doctor.name}
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-sm font-medium text-slate-500 mt-1">
                         {apt.type || 'Consulta'}

@@ -64,8 +64,8 @@ export default function Layout() {
     : ''
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pt-10">
-      <header className="relative w-full h-32 md:h-48 overflow-hidden bg-[#E8EFE7] shrink-0 border-b border-[#C8D5C4]">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pt-[1cm]">
+      <header className="relative w-full h-32 md:h-48 overflow-hidden bg-white shrink-0 border-b border-[#C8D5C4]">
         <img
           src={bannerImg}
           alt="DrGestorClin Banner"
@@ -122,7 +122,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <nav className="bg-[#E8EFE7] pt-3 px-4 shadow-sm relative z-40">
+      <nav className="bg-[#C8D5C4] pt-3 px-4 shadow-sm relative z-40">
         <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2">
           {navItems.map((item) => {
             const isActive =
@@ -135,8 +135,8 @@ export default function Layout() {
                 className={cn(
                   'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-t-xl border border-b-0 whitespace-nowrap',
                   isActive
-                    ? 'bg-slate-50 text-brand-forest border-[#C8D5C4] relative z-10'
-                    : 'bg-[#C8D5C4]/40 text-brand-forest/70 border-transparent hover:bg-[#C8D5C4]/70 hover:text-brand-forest',
+                    ? 'bg-slate-50 text-[#113D24] border-[#C8D5C4] relative z-10'
+                    : 'bg-[#A8B8A4] text-[#113D24]/80 border-transparent hover:bg-[#97A892] hover:text-[#113D24]',
                 )}
                 style={{ marginBottom: isActive ? '-1px' : '0' }}
               >

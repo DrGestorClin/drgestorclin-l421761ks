@@ -35,6 +35,25 @@ export default function Index() {
     loadStats()
   }, [isDoctor])
 
+  // Optional: load today's appointments for a quick stat
+  const [appointmentsCount, setAppointmentsCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (isDoctor) return
+    const loadApts = async () => {
+      try {
+        const { getAppointments } = await import('@/services/appointments')
+        const all = await getAppointments()
+        const today = new Date().toISOString().split('T')[0]
+        const todayApts = all.filter((a) => a.start_time.startsWith(today))
+        setAppointmentsCount(todayApts.length)
+      } catch {
+        setAppointmentsCount(0)
+      }
+    }
+    loadApts()
+  }, [isDoctor])
+
   if (isDoctor) {
     return <Navigate to="/patients" replace />
   }
@@ -42,7 +61,7 @@ export default function Index() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-brand-forest">Dashboard</h2>
         <p className="text-muted-foreground mt-1">
           Bem-vindo(a), {user?.name || 'Administrador'}! Visão geral da clínica.
         </p>
@@ -52,37 +71,45 @@ export default function Index() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pacientes</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-brand-forest/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{loading ? '—' : stats.patients}</div>
+            <div className="text-2xl font-bold text-brand-forest">
+              {loading ? '—' : stats.patients}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Médicos</CardTitle>
-            <UserRound className="h-4 w-4 text-muted-foreground" />
+            <UserRound className="h-4 w-4 text-brand-forest/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{loading ? '—' : stats.doctors}</div>
+            <div className="text-2xl font-bold text-brand-forest">
+              {loading ? '—' : stats.doctors}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Modelos de Prontuário</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-brand-forest/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{loading ? '—' : stats.templates}</div>
+            <div className="text-2xl font-bold text-brand-forest">
+              {loading ? '—' : stats.templates}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agenda</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Consultas Hoje</CardTitle>
+            <Calendar className="h-4 w-4 text-brand-forest/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">—</div>
+            <div className="text-2xl font-bold text-brand-forest">
+              {appointmentsCount === null ? '—' : appointmentsCount}
+            </div>
           </CardContent>
         </Card>
       </div>
