@@ -1,262 +1,144 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useRealtime } from '@/hooks/use-realtime'
+import { Link } from 'react-router-dom'
+import { Plus, Search, FileText, UserCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import {
   getPatients,
   getPatientsByDoctor,
   getHistoricalPatients,
-  deletePatient,
-  getPatientPhotoUrl,
   type Patient,
 } from '@/services/patients'
-import { getAllDoctors, type Doctor } from '@/services/doctors'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
-import { Search, UserCircle, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { PatientFormSheet } from '@/components/patient-form-sheet'
 import { useToast } from '@/hooks/use-toast'
-import { useNavigate } from 'react-router-dom'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import pb from '@/lib/pocketbase/client'
 
 export default function PatientsPage() {
-  const { isAdmin, isDoctor, doctorId } = useAuth()
-  const { toast } = useToast()
-  const navigate = useNavigate()
-  const [patients, setPatients] = useState<Patient[]>([])
-  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const { isDoctor, doctorId } = useAuth()
+  const [patients, setPatients] = useState<(Patient & { _historical?: boolean })[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('current')
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingPatient, setEditingPatient] = useState<Patient | null>(null)
+  const { toast } = useToast()
 
-  const loadData = useCallback(async () => {
+  const loadPatients = useCallback(async () => {
     try {
-      const doctorData = await getAllDoctors()
-      setDoctors(doctorData as Doctor[])
+      if (isDoctor && doctorId) {
+        const active = await getPatientsByDoctor(doctorId)
+        const historical = await getHistoricalPatients(doctorId)
 
-      if (isAdmin) {
-        const patientData = await getPatients()
-        setPatients(patientData as Patient[])
-      } else if (doctorId) {
-        if (activeTab === 'current') {
-          const patientData = await getPatientsByDoctor(doctorId)
-          setPatients(patientData as Patient[])
-        } else {
-          const patientData = await getHistoricalPatients(doctorId)
-          setPatients(patientData as Patient[])
-        }
+        const map = new Map<string, Patient & { _historical?: boolean }>()
+        active.forEach((p) => map.set(p.id, p))
+        historical.forEach((p) => {
+          if (!map.has(p.id)) {
+            map.set(p.id, { ...p, _historical: true })
+          }
+        })
+        setPatients(Array.from(map.values()))
+      } else {
+        const data = await getPatients()
+        setPatients(data)
       }
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao carregar pacientes.', variant: 'destructive' })
+    } catch (err) {
+      toast({ title: 'Erro', description: 'Falha ao carregar pacientes', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [isAdmin, doctorId, activeTab, toast])
+  }, [isDoctor, doctorId, toast])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
-  useRealtime('patients', () => {
-    loadData()
-  })
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    setLoading(true)
-  }
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deletePatient(id)
-      toast({ title: 'Sucesso', description: 'Paciente excluído com sucesso.' })
-      await loadData()
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao excluir paciente.', variant: 'destructive' })
-    }
-  }
-
-  const openCreate = () => {
-    setEditingPatient(null)
-    setFormOpen(true)
-  }
-
-  const openEdit = (patient: Patient) => {
-    setEditingPatient(patient)
-    setFormOpen(true)
-  }
+    loadPatients()
+  }, [loadPatients])
 
   const filtered = patients.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.expand?.doctor?.name?.toLowerCase().includes(search.toLowerCase()) ?? false),
+      (p.email && p.email.toLowerCase().includes(search.toLowerCase())),
   )
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '—'
-    return new Date(dateStr).toLocaleDateString('pt-BR')
-  }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Pacientes</h2>
-          <p className="text-muted-foreground mt-1">
-            {isAdmin
-              ? 'Gerencie o cadastro de pacientes e seus médicos responsáveis.'
-              : 'Acesse os pacientes sob seus cuidados.'}
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-brand-forest">Pacientes</h1>
+          <p className="text-slate-500 mt-1">Gerencie os pacientes e seus prontuários.</p>
         </div>
-        {isAdmin && (
-          <Button onClick={openCreate}>
-            <Plus className="mr-2 h-4 w-4" /> Novo Paciente
+        {!isDoctor && (
+          <Button asChild className="bg-brand-forest hover:bg-brand-forest/90">
+            <Link to="/patients/new">
+              <Plus className="mr-2 h-4 w-4" /> Novo Paciente
+            </Link>
           </Button>
         )}
       </div>
 
-      {isDoctor && (
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="current">Meus Pacientes</TabsTrigger>
-            <TabsTrigger value="history">Pacientes Anteriores</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      )}
-
-      {isDoctor && activeTab === 'history' && (
-        <p className="text-sm text-muted-foreground">
-          Pacientes anteriormente atendidos por você. Acesso apenas leitura.
-        </p>
-      )}
-
-      <div className="bg-white rounded-md border shadow-sm overflow-hidden">
-        <div className="p-4 border-b flex items-center max-w-sm relative bg-slate-50/50">
-          <Search className="absolute left-7 top-6 h-4 w-4 text-muted-foreground" />
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Buscar por nome ou médico..."
+            placeholder="Buscar por nome ou e-mail..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-white"
+            className="pl-9"
           />
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Paciente</TableHead>
-              <TableHead>Data de Nascimento</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Médico Responsável</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={5}>
-                      <Skeleton className="h-8 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              : filtered.map((p) => (
-                  <TableRow
-                    key={p.id}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate(`/patients/${p.id}`)}
-                  >
-                    <TableCell className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8 border">
-                        <AvatarImage
-                          src={
-                            getPatientPhotoUrl(p) ||
-                            `https://img.usecurling.com/ppl/thumbnail?seed=${p.id}`
-                          }
-                        />
-                        <AvatarFallback>
-                          <UserCircle className="h-5 w-5 text-muted-foreground" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-semibold">{p.name}</span>
-                    </TableCell>
-                    <TableCell>{formatDate(p.birth_date)}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">{p.phone || '—'}</div>
-                      <div className="text-xs text-muted-foreground">{p.email || ''}</div>
-                    </TableCell>
-                    <TableCell>
-                      {p.expand?.doctor ? (
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-0">
-                          {p.expand.doctor.name}
-                        </Badge>
-                      ) : (
-                        '—'
-                      )}
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      {(isAdmin || (isDoctor && p.doctor === doctorId)) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEdit(p)}>
-                              <Edit className="mr-2 h-4 w-4" /> Editar
-                            </DropdownMenuItem>
-                            {isAdmin && (
-                              <DropdownMenuItem
-                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                onClick={() => handleDelete(p.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-            {!loading && filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                  {activeTab === 'history'
-                    ? 'Nenhum paciente anterior encontrado.'
-                    : 'Nenhum paciente encontrado.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
       </div>
 
-      {isAdmin && (
-        <PatientFormSheet
-          doctors={doctors}
-          onSuccess={loadData}
-          patient={editingPatient}
-          open={formOpen}
-          onOpenChange={setFormOpen}
-        />
+      {loading ? (
+        <div className="text-center py-12 text-slate-500">Carregando pacientes...</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-slate-500 bg-white rounded-xl border border-slate-200">
+          Nenhum paciente encontrado.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((patient) => {
+            const avatarUrl = patient.photo
+              ? `${pb.baseURL}/api/files/patients/${patient.id}/${patient.photo}`
+              : ''
+
+            return (
+              <div
+                key={patient.id}
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden"
+              >
+                {patient._historical && (
+                  <div className="absolute top-0 right-0 bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                    Histórico
+                  </div>
+                )}
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar className="h-12 w-12 border border-slate-100">
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback className="bg-brand-military/20 text-brand-forest font-bold">
+                      {patient.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-bold text-slate-800 line-clamp-1">{patient.name}</h3>
+                    <p className="text-sm text-slate-500">{patient.phone || 'Sem telefone'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                  <div className="text-xs text-slate-500">
+                    {!isDoctor && patient.expand?.doctor && (
+                      <span className="flex items-center gap-1">
+                        <UserCircle className="h-3 w-3" />
+                        {patient.expand.doctor.name}
+                      </span>
+                    )}
+                  </div>
+                  <Button asChild variant="outline" size="sm" className="gap-2">
+                    <Link to={`/patients/${patient.id}`}>
+                      <FileText className="h-4 w-4" /> Prontuário
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )

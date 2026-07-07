@@ -1,210 +1,198 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
-import { useRealtime } from '@/hooks/use-realtime'
-import { getPatient, getPatientPhotoUrl, type Patient } from '@/services/patients'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { getPatient, type Patient } from '@/services/patients'
 import { getMedicalRecords, type MedicalRecord } from '@/services/medical-records'
-import { getDoctors, type Doctor } from '@/services/doctors'
 import { useAuth } from '@/hooks/use-auth'
-import { useToast } from '@/hooks/use-toast'
-import { MedicalRecordForm } from '@/components/medical-record-form'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { ArrowLeft, Edit, Plus, Clock, FileText, Lock } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
+import { useToast } from '@/hooks/use-toast'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, FileText, Plus, UserCircle, Stethoscope, Calendar, Lock } from 'lucide-react'
 
 export default function PatientDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const { isAdmin, isDoctor, doctorId } = useAuth()
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { isDoctor, doctorId, isAdmin } = useAuth()
   const { toast } = useToast()
+
   const [patient, setPatient] = useState<Patient | null>(null)
   const [records, setRecords] = useState<MedicalRecord[]>([])
-  const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(true)
-  const [formOpen, setFormOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!id) return
     try {
-      const [p, recs, docs] = await Promise.all([
-        getPatient(id),
-        getMedicalRecords(id),
-        getDoctors(),
-      ])
+      const p = await getPatient(id)
       setPatient(p)
-      setRecords(recs)
-      setDoctors(docs)
-    } catch {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar dados do paciente.',
-        variant: 'destructive',
-      })
+
+      const r = await getMedicalRecords(id)
+
+      if (isDoctor && p.doctor !== doctorId) {
+        setRecords(r.filter((rec) => rec.doctor === doctorId))
+      } else {
+        setRecords(r)
+      }
+    } catch (err) {
+      toast({ title: 'Erro', description: 'Paciente não encontrado', variant: 'destructive' })
+      navigate('/patients')
     } finally {
       setLoading(false)
     }
-  }, [id, toast])
+  }, [id, doctorId, isDoctor, navigate, toast])
 
   useEffect(() => {
     loadData()
   }, [loadData])
 
-  useRealtime('medical_records', () => {
-    loadData()
-  })
-
-  useRealtime('patients', () => {
-    loadData()
-  })
-
-  const fmtDate = (d: string) => (d ? new Date(d).toLocaleDateString('pt-BR') : '—')
-  const fmtDateTime = (d: string) =>
-    d
-      ? new Date(d).toLocaleString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      : '—'
-
-  const isCurrentDoctor = isDoctor && patient?.doctor === doctorId
-  const hasHistoricalRecords = isDoctor && records.some((r) => r.doctor === doctorId)
-  const canEdit = isAdmin || isCurrentDoctor
-  const hasAccess = !isDoctor || isCurrentDoctor || hasHistoricalRecords
-
   if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
+    return <div className="p-8 text-center text-slate-500 animate-pulse">Carregando dados...</div>
   }
 
-  if (!patient) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Paciente não encontrado.</p>
-        <Button asChild className="mt-4">
-          <Link to="/patients">Voltar</Link>
-        </Button>
-      </div>
-    )
-  }
+  if (!patient) return null
 
-  if (!hasAccess) {
-    return <Navigate to="/patients" replace />
-  }
+  const isCurrentDoctor = patient.doctor === doctorId
+  const isHistorical = isDoctor && !isCurrentDoctor
+  const canEditPatient = isAdmin || isCurrentDoctor
+  const canAddRecord = isCurrentDoctor
+
+  const avatarUrl = patient.photo
+    ? `${pb.baseURL}/api/files/patients/${patient.id}/${patient.photo}`
+    : ''
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <Button variant="ghost" size="sm" asChild>
-        <Link to="/patients" className="text-[hsl(var(--brand-green-dark))]">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Pacientes
-        </Link>
-      </Button>
+    <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigate('/patients')}
+          className="shrink-0"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold tracking-tight text-brand-forest">
+            Prontuário do Paciente
+          </h1>
+        </div>
+      </div>
 
-      <Card>
-        <CardContent className="flex flex-col sm:flex-row items-start gap-4 p-6">
-          <Avatar className="h-16 w-16 border">
-            <AvatarImage
-              src={
-                getPatientPhotoUrl(patient) ||
-                `https://img.usecurling.com/ppl/thumbnail?seed=${patient.id}`
-              }
-            />
-            <AvatarFallback>
-              <UserCircle className="h-8 w-8 text-muted-foreground" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-2xl font-bold">{patient.name}</h2>
-              {!canEdit && (
-                <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-0">
-                  <Lock className="mr-1 h-3 w-3" /> Apenas Leitura
-                </Badge>
+      {isHistorical && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 text-amber-800">
+          <Lock className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-bold">Acesso Histórico (Somente Leitura)</h4>
+            <p className="text-sm mt-1 opacity-90">
+              Você não é o médico atual deste paciente. Você tem permissão apenas para visualizar os
+              prontuários criados por você anteriormente.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 items-start">
+        <Avatar className="h-24 w-24 border-2 border-slate-100 shadow-sm shrink-0">
+          <AvatarImage src={avatarUrl} />
+          <AvatarFallback className="bg-brand-military/20 text-brand-forest text-2xl font-bold">
+            {patient.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">{patient.name}</h2>
+            <div className="mt-2 space-y-1 text-sm text-slate-600">
+              <p>
+                <strong>Email:</strong> {patient.email || 'Não informado'}
+              </p>
+              <p>
+                <strong>Telefone:</strong> {patient.phone || 'Não informado'}
+              </p>
+              {patient.birth_date && (
+                <p>
+                  <strong>Nascimento:</strong> {format(new Date(patient.birth_date), 'dd/MM/yyyy')}
+                </p>
               )}
             </div>
-            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-              <span>
-                <Calendar className="inline mr-1 h-3 w-3" /> {fmtDate(patient.birth_date)}
-              </span>
-              <span>{patient.phone || '—'}</span>
-              <span>{patient.email || ''}</span>
+          </div>
+          <div>
+            <div className="text-sm text-slate-600 space-y-1">
+              <p>
+                <strong>Médico Responsável:</strong>{' '}
+                <Badge variant={isCurrentDoctor ? 'default' : 'secondary'} className="ml-1">
+                  {patient.expand?.doctor?.name || 'Nenhum'}
+                </Badge>
+              </p>
+              <p>
+                <strong>Cadastrado em:</strong> {format(new Date(patient.created), 'dd/MM/yyyy')}
+              </p>
             </div>
           </div>
-          {patient.expand?.doctor && (
-            <Badge
-              variant="outline"
-              className="bg-[hsl(var(--brand-green-light))] text-[hsl(var(--brand-green-dark))] border-0"
-            >
-              <Stethoscope className="mr-1 h-3 w-3" /> {patient.expand.doctor.name}
-            </Badge>
-          )}
-        </CardContent>
-      </Card>
+        </div>
 
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-[hsl(var(--brand-green-dark))]">Prontuários</h3>
-        {canEdit && (
-          <Button
-            onClick={() => setFormOpen(true)}
-            className="bg-[hsl(var(--brand-green))] hover:bg-[hsl(var(--brand-green-dark))] text-white border-0"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Novo Prontuário
+        {canEditPatient && (
+          <Button variant="outline" className="w-full md:w-auto shrink-0">
+            <Edit className="mr-2 h-4 w-4" /> Editar
           </Button>
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-brand-military" />
+            Histórico de Prontuários
+          </h3>
+          {canAddRecord && (
+            <Button className="bg-brand-forest hover:bg-brand-forest/90">
+              <Plus className="mr-2 h-4 w-4" /> Novo Registro
+            </Button>
+          )}
+        </div>
+
         {records.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              Nenhum prontuário registrado.
-            </CardContent>
-          </Card>
+          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
+            <FileText className="h-12 w-12 mx-auto text-slate-300 mb-3" />
+            <p>Nenhum registro encontrado para este paciente.</p>
+          </div>
         ) : (
-          records.map((r) => (
-            <Card key={r.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
+          <div className="space-y-4">
+            {records.map((record) => (
+              <div
+                key={record.id}
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4 mb-3 border-b border-slate-100 pb-3">
                   <div>
-                    <CardTitle className="text-base">{r.title}</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">{fmtDateTime(r.created)}</p>
+                    <h4 className="font-bold text-lg text-slate-800">{record.title}</h4>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(record.created), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
+                          locale: ptBR,
+                        })}
+                      </span>
+                      <span>•</span>
+                      <span>Dr(a). {record.expand?.doctor?.name}</span>
+                    </div>
                   </div>
-                  {r.expand?.doctor && (
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {r.expand.doctor.name}
-                    </Badge>
+                  {(!isHistorical || isAdmin) && record.doctor === doctorId && (
+                    <Button variant="ghost" size="sm" className="h-8">
+                      <Edit className="h-4 w-4 mr-2" /> Editar
+                    </Button>
                   )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                <pre className="whitespace-pre-wrap text-sm font-sans text-muted-foreground line-clamp-6">
-                  {r.content}
-                </pre>
-              </CardContent>
-            </Card>
-          ))
+                <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap">
+                  {record.content}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
-
-      {canEdit && (
-        <MedicalRecordForm
-          patientId={patient.id}
-          doctors={doctors}
-          defaultDoctorId={doctorId || ''}
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          onSuccess={loadData}
-        />
-      )}
     </div>
   )
 }

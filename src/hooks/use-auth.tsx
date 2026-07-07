@@ -10,12 +10,15 @@ interface AuthUser {
   doctor_ref?: string
 }
 
+import { getDoctor, type Doctor } from '@/services/doctors'
+
 interface AuthContextType {
   user: AuthUser | null
   isAuthenticated: boolean
   isAdmin: boolean
   isDoctor: boolean
   doctorId: string | null
+  doctor: Doctor | null
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signInWith: (provider: string) => Promise<{ error: any }>
@@ -35,8 +38,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(
     pb.authStore.isValid ? (pb.authStore.record as unknown as AuthUser) : null,
   )
+  const [doctor, setDoctor] = useState<Doctor | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (user?.doctor_ref) {
+      getDoctor(user.doctor_ref)
+        .then(setDoctor)
+        .catch(() => setDoctor(null))
+    } else {
+      setDoctor(null)
+    }
+  }, [user?.doctor_ref])
 
   useEffect(() => {
     const unsubscribe = pb.authStore.onChange((_token, record) => {
@@ -108,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         isDoctor,
         doctorId,
+        doctor,
         signIn,
         signUp,
         signInWith,

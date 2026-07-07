@@ -212,9 +212,10 @@ export default function AgendaPage() {
                         'text-[10px] sm:text-xs px-1.5 py-0.5 rounded text-white truncate shadow-sm font-medium',
                         STATUS_COLORS[apt.status] || 'bg-slate-400',
                       )}
+                      title={apt.expand?.patient?.name}
                     >
                       <span className="font-bold mr-1">{formatTime(apt.start_time)}</span>
-                      {apt.expand?.patient?.name.split(' ')[0]}
+                      {apt.expand?.patient?.name}
                     </div>
                   ))}
                 </div>

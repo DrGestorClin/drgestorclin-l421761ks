@@ -48,8 +48,11 @@ export default function Layout() {
     navigate('/login')
   }
 
+  const { doctor } = useAuth()
+  const displayName = isDoctor && doctor ? doctor.name : user?.name || 'Usuário'
+
   const initials =
-    user?.name
+    displayName
       ?.split(' ')
       .map((n: string) => n[0])
       .slice(0, 2)
@@ -61,14 +64,13 @@ export default function Layout() {
     : ''
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="relative w-full h-32 md:h-48 overflow-hidden bg-brand-forest shrink-0">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pt-10">
+      <header className="relative w-full h-32 md:h-48 overflow-hidden bg-[#E8EFE7] shrink-0 border-b border-[#C8D5C4]">
         <img
           src={bannerImg}
           alt="DrGestorClin Banner"
-          className="w-full h-full object-cover opacity-90 object-center"
+          className="w-full h-full object-contain object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-forest/90 via-brand-forest/20 to-transparent pointer-events-none" />
 
         <div className="absolute top-4 right-4 flex items-center gap-2 md:gap-3 bg-white/95 backdrop-blur shadow-sm px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-white/20">
           <Button
@@ -93,7 +95,7 @@ export default function Layout() {
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
                   <span className="font-bold text-sm text-brand-forest leading-none">
-                    {user?.name || 'Usuário'}
+                    {displayName}
                   </span>
                   <span className="text-[10px] text-slate-500 font-medium mt-0.5">
                     {isDoctor ? 'Médico' : 'Administrador'}
@@ -104,7 +106,7 @@ export default function Layout() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.name}</p>
+                  <p className="text-sm font-medium leading-none">{displayName}</p>
                   <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
@@ -118,17 +120,10 @@ export default function Layout() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
-        <div className="absolute bottom-4 left-4 md:bottom-6 md:left-8">
-          <h1 className="text-white font-bold text-2xl md:text-3xl drop-shadow-md">DrGestorClin</h1>
-          <p className="text-white/80 text-sm md:text-base font-medium drop-shadow hidden sm:block">
-            Eficiência em Gestão de Clínicas e Consultórios
-          </p>
-        </div>
       </header>
 
-      <nav className="bg-brand-military sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2 md:px-6">
+      <nav className="bg-[#E8EFE7] pt-3 px-4 shadow-sm relative z-40">
+        <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2">
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.url ||
@@ -138,11 +133,12 @@ export default function Layout() {
                 key={item.title}
                 to={item.url}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-3 md:py-4 text-sm font-bold transition-all border-b-4 whitespace-nowrap',
+                  'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-t-xl border border-b-0 whitespace-nowrap',
                   isActive
-                    ? 'border-brand-forest text-brand-forest bg-white/20'
-                    : 'border-transparent text-brand-forest/70 hover:text-brand-forest hover:bg-white/10',
+                    ? 'bg-slate-50 text-brand-forest border-[#C8D5C4] relative z-10'
+                    : 'bg-[#C8D5C4]/40 text-brand-forest/70 border-transparent hover:bg-[#C8D5C4]/70 hover:text-brand-forest',
                 )}
+                style={{ marginBottom: isActive ? '-1px' : '0' }}
               >
                 <item.icon className={cn('h-4 w-4', isActive ? 'stroke-[2.5px]' : 'stroke-2')} />
                 {item.title}

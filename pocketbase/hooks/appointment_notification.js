@@ -37,13 +37,16 @@ onRecordAfterCreateSuccess((e) => {
     let formattedDate = startTime
     let formattedTime = ''
     try {
-      let clean = startTime.replace('T', ' ').split('.')[0]
-      const parts = clean.split(' ')
-      if (parts.length > 1) {
-        const dParts = parts[0].split('-')
-        formattedDate = dParts[2] + '/' + dParts[1] + '/' + dParts[0]
-        const tParts = parts[1].split(':')
-        formattedTime = tParts[0] + ':' + tParts[1]
+      const d = new Date(startTime)
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0')
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const year = d.getFullYear()
+        formattedDate = day + '/' + month + '/' + year
+
+        const hours = String(d.getHours()).padStart(2, '0')
+        const minutes = String(d.getMinutes()).padStart(2, '0')
+        formattedTime = hours + ':' + minutes
       }
     } catch (_) {}
 
@@ -51,7 +54,7 @@ onRecordAfterCreateSuccess((e) => {
     const text =
       'Olá ' +
       patientName +
-      ',\n\nSeu agendamento foi confirmado!\n\nMédico: ' +
+      ',\n\nSeu agendamento foi confirmado!\n\nDetalhes da Consulta:\nMédico: ' +
       doctorName +
       '\nData: ' +
       formattedDate +
@@ -59,9 +62,9 @@ onRecordAfterCreateSuccess((e) => {
       formattedTime +
       '\n\nAtenciosamente,\nEquipe DrGestorClin'
     const html =
-      '<p>Olá ' +
+      '<p>Olá <strong>' +
       patientName +
-      ',</p><p>Seu agendamento foi confirmado!</p><ul><li><strong>Médico:</strong> ' +
+      '</strong>,</p><p>Seu agendamento foi confirmado!</p><h3>Detalhes da Consulta:</h3><ul><li><strong>Médico:</strong> ' +
       doctorName +
       '</li><li><strong>Data:</strong> ' +
       formattedDate +
