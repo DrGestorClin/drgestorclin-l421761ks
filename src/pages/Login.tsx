@@ -68,6 +68,11 @@ export default function LoginPage() {
       setForgotError('Informe um endereço de e-mail.')
       return
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(forgotEmail.trim())) {
+      setForgotError('E-mail inválido. Verifique o formato do endereço.')
+      return
+    }
     setForgotLoading(true)
     setForgotError('')
     const result = await forgotPassword(forgotEmail)
@@ -138,7 +143,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-[hsl(var(--brand-green))] hover:bg-[hsl(var(--brand-green-dark))] text-white"
-              disabled={loading}
+              disabled={!email || !password || loading}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Entrar
@@ -243,6 +248,7 @@ export default function LoginPage() {
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder="seu@email.com"
+                      required
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
