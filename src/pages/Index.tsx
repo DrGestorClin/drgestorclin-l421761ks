@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Link } from 'react-router-dom'
+import { Navigate, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { getPatients } from '@/services/patients'
 import { getDoctors } from '@/services/doctors'
@@ -35,6 +35,8 @@ function StatCard({
   loading,
   bgColor,
   delay,
+  onClick,
+  clickable,
 }: {
   title: string
   value: string | number
@@ -42,26 +44,32 @@ function StatCard({
   loading: boolean
   bgColor: string
   delay: number
+  onClick?: () => void
+  clickable?: boolean
 }) {
   return (
     <Card
       className={cn(
-        'relative overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in-up rounded-2xl',
+        'relative overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in-up rounded-2xl cursor-pointer group',
         bgColor,
       )}
       style={{ animationDelay: `${delay}ms` }}
+      onClick={onClick}
     >
       <CardContent className="p-5 flex flex-col justify-between h-full min-h-[120px]">
         <div className="flex items-start justify-between">
           <p className="text-sm md:text-base font-medium text-white/90">{title}</p>
-          <div className="rounded-lg bg-white/20 p-2 backdrop-blur-sm flex items-center justify-center">
+          <div className="rounded-lg bg-white/20 p-2 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
             <Icon className="h-5 w-5 text-white" />
           </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-4 flex items-end justify-between">
           <p className="text-4xl md:text-5xl font-bold text-white tabular-nums tracking-tight">
             {loading ? '—' : value}
           </p>
+          {clickable && (
+            <ArrowRight className="h-5 w-5 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all" />
+          )}
         </div>
       </CardContent>
     </Card>
@@ -70,6 +78,7 @@ function StatCard({
 
 export default function Index() {
   const { user, isDoctor } = useAuth()
+  const navigate = useNavigate()
   const [stats, setStats] = useState({ patients: 0, doctors: 0, templates: 0 })
   const [loading, setLoading] = useState(true)
   const [appointmentsCount, setAppointmentsCount] = useState<number | null>(null)
@@ -149,6 +158,8 @@ export default function Index() {
           loading={loading}
           bgColor="bg-[#3B9169]"
           delay={0}
+          clickable
+          onClick={() => navigate('/patients')}
         />
         <StatCard
           title="Médicos"
@@ -173,6 +184,8 @@ export default function Index() {
           loading={appointmentsCount === null}
           bgColor="bg-[#E29923]"
           delay={225}
+          clickable
+          onClick={() => navigate('/agenda')}
         />
       </div>
 

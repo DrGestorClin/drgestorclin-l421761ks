@@ -69,7 +69,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#EAF1EC] text-foreground flex flex-col font-sans">
-      <header className="relative w-full h-[140px] sm:h-[180px] md:h-[220px] overflow-hidden shrink-0 flex items-center justify-center shadow-inner bg-[#5E806D]">
+      <header className="relative w-full h-[110px] sm:h-[150px] md:h-[200px] overflow-hidden shrink-0 flex items-center justify-center shadow-inner bg-[#5E806D]">
         <Link to="/" className="absolute inset-0 z-10 block">
           <img
             src={headerBanner}
@@ -78,14 +78,14 @@ export default function Layout() {
           />
         </Link>
 
-        <div className="absolute top-4 right-4 flex items-center gap-3 bg-[#F4F8F6] shadow-sm px-3 py-2 rounded-full border border-white/60 z-20">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 bg-[#F4F8F6] shadow-sm px-2 py-1.5 sm:px-3 sm:py-2 rounded-full border border-white/60 z-20">
           <Button
             variant="ghost"
             size="icon"
-            className="relative shrink-0 hover:bg-black/5 transition-colors h-9 w-9 rounded-full hidden sm:flex text-[#5A7B68]"
+            className="relative shrink-0 hover:bg-black/5 transition-colors h-8 w-8 sm:h-9 sm:w-9 rounded-full hidden sm:flex text-[#5A7B68]"
           >
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-rose-500 border border-white" />
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="absolute top-1.5 right-2 h-2 w-2 rounded-full bg-rose-500 border border-white" />
           </Button>
 
           <div className="hidden sm:block h-8 w-px bg-black/10" />
@@ -94,11 +94,11 @@ export default function Layout() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="gap-3 px-1 hover:bg-black/5 h-auto py-1 rounded-full"
+                className="gap-2 sm:gap-3 px-1 hover:bg-black/5 h-auto py-1 rounded-full"
               >
-                <Avatar className="h-9 w-9 border border-[#CDE0D5]">
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-[#CDE0D5] shrink-0">
                   <AvatarImage src={avatarUrl} />
-                  <AvatarFallback className="bg-[#E5EFE9] text-[#4A6455] text-sm font-bold">
+                  <AvatarFallback className="bg-[#E5EFE9] text-[#4A6455] text-xs sm:text-sm font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -132,8 +132,8 @@ export default function Layout() {
         </div>
       </header>
 
-      <nav className="bg-[#668A75] px-4 shadow-sm relative z-40 border-b border-[#5E806D]/30">
-        <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2 pt-3">
+      <nav className="bg-[#668A75] px-2 sm:px-4 shadow-sm relative z-40 border-b border-[#5E806D]/30">
+        <div className="flex items-end gap-0.5 sm:gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-1 sm:px-2 pt-3">
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.url ||
@@ -143,13 +143,15 @@ export default function Layout() {
                 key={item.title}
                 to={item.url}
                 className={cn(
-                  'flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all rounded-t-xl whitespace-nowrap',
+                  'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-all rounded-t-xl whitespace-nowrap',
                   isActive
                     ? 'bg-[#EAF1EC] text-[#2A4434]'
                     : 'text-white/80 hover:bg-white/10 hover:text-white',
                 )}
               >
-                <item.icon className={cn('h-4 w-4', isActive ? 'stroke-[2.5px]' : 'stroke-2')} />
+                <item.icon
+                  className={cn('h-4 w-4 sm:h-4 sm:w-4', isActive ? 'stroke-[2.5px]' : 'stroke-2')}
+                />
                 {item.title}
               </Link>
             )
