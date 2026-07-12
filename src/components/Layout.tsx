@@ -38,20 +38,20 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const location = useLocation()
-  const { user, signOut, isDoctor } = useAuth()
+  const { user, signOut, isDoctor, isAdmin, doctor } = useAuth()
   const navigate = useNavigate()
 
-  const DOCTOR_HIDDEN = ['Médicos', 'Configurações']
-  const navItems = isDoctor
-    ? NAV_ITEMS.filter((item) => !DOCTOR_HIDDEN.includes(item.title))
-    : NAV_ITEMS
+  const navItems = NAV_ITEMS.filter((item) => {
+    if (item.title === 'Configurações' && !isAdmin) return false
+    if (item.title === 'Médicos' && isDoctor) return false
+    return true
+  })
 
   const handleSignOut = () => {
     signOut()
     navigate('/login')
   }
 
-  const { doctor } = useAuth()
   const displayName = isDoctor && doctor ? doctor.name : user?.name || 'DrGestorClin Admin'
   const roleName = isDoctor ? 'Médico' : 'Administrator'
 

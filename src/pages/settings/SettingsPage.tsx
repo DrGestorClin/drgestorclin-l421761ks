@@ -6,7 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Mail, Loader2, CheckCircle, AlertCircle, ShieldCheck, Users, History } from 'lucide-react'
+import {
+  Mail,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  ShieldCheck,
+  Users,
+  History,
+  ShieldAlert,
+} from 'lucide-react'
 import { sendTestEmail } from '@/services/smtp'
 import { useToast } from '@/hooks/use-toast'
 import { UsersManager } from '@/components/admin-panel/users-manager'
@@ -52,6 +61,15 @@ export default function SettingsPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-[#2A4434]">Configurações</h2>
         <p className="text-[#4A6455] mt-1">Gerencie as configurações do sistema.</p>
+      </div>
+
+      <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
+        <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-sm text-amber-800">
+          O tratamento de dados e o sigilo jurídico das informações são de responsabilidade dos
+          médicos e profissionais de saúde, em estrita conformidade com a LGPD (Lei Geral de
+          Proteção de Dados).
+        </p>
       </div>
 
       <Tabs defaultValue="email" className="w-full">
