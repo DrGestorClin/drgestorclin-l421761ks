@@ -23,7 +23,7 @@ onRecordViewRequest((e) => {
     }
   }
 
-  var key = $secrets.get('MEDICAL_RECORD_ENCRYPTION_KEY')
+  var key = $secrets.get('ENCRYPTION_KEY')
   if (key) {
     try {
       var encrypted = record.getString('content')

@@ -168,6 +168,8 @@ export default function Index() {
           loading={loading}
           bgColor="bg-[#2B8AC1]"
           delay={75}
+          clickable
+          onClick={() => navigate('/doctors')}
         />
         <StatCard
           title="Modelos de Prontuário"
@@ -176,6 +178,8 @@ export default function Index() {
           loading={loading}
           bgColor="bg-[#9A4C9D]"
           delay={150}
+          clickable
+          onClick={() => navigate('/templates')}
         />
         <StatCard
           title="Consultas Hoje"

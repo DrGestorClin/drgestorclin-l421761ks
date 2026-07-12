@@ -1,6 +1,6 @@
 onRecordListRequest((e) => {
   var records = e.records || []
-  var key = $secrets.get('MEDICAL_RECORD_ENCRYPTION_KEY')
+  var key = $secrets.get('ENCRYPTION_KEY')
   var userId = (e.auth && e.auth.id) || ''
   var userRole = (e.auth && e.auth.getString && e.auth.getString('role')) || ''
   var doctorRef = (e.auth && e.auth.getString && e.auth.getString('doctor_ref')) || ''

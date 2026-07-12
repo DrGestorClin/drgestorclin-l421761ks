@@ -31,6 +31,11 @@ export const getAppointmentsByDoctor = async (doctorId: string): Promise<Appoint
     sort: 'start_time',
   })
 
+export const getAppointment = async (id: string): Promise<Appointment> =>
+  pb.collection('appointments').getOne(id, {
+    expand: 'patient,doctor',
+  })
+
 export const createAppointment = async (data: {
   patient: string
   doctor: string
