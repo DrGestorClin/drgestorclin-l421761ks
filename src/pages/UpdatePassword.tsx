@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Loader2, CheckCircle, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
-import { getErrorMessage } from '@/lib/pocketbase/errors'
+import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 import { passwordRules } from '@/lib/password-validation'
 import { Captcha } from '@/components/captcha'
 import logoUrl from '@/assets/image-70721.png'
@@ -19,6 +19,7 @@ export default function UpdatePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [captchaVerified, setCaptchaVerified] = useState(false)
   const [captchaKey, setCaptchaKey] = useState(0)
 
@@ -36,6 +37,7 @@ export default function UpdatePasswordPage() {
 
     setLoading(true)
     setError('')
+    setFieldErrors({})
 
     try {
       const updated = await pb.collection('users').update(user.id, {
@@ -49,7 +51,13 @@ export default function UpdatePasswordPage() {
         window.location.href = '/'
       }, 1500)
     } catch (err) {
-      setError(getErrorMessage(err))
+      const fieldErrs = extractFieldErrors(err)
+      if (Object.keys(fieldErrs).length > 0) {
+        setFieldErrors(fieldErrs)
+        setError('')
+      } else {
+        setError(getErrorMessage(err))
+      }
       setCaptchaVerified(false)
       setCaptchaKey((k) => k + 1)
     } finally {
@@ -84,32 +92,38 @@ export default function UpdatePasswordPage() {
               do profissional de saúde.
             </p>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="new-password">Nova Senha</Label>
               <Input
                 id="new-password"
+                name="password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
-                required
                 autoComplete="new-password"
               />
+              {fieldErrors.password && (
+                <p className="text-sm text-destructive">{fieldErrors.password}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
               <Input
                 id="confirm-password"
+                name="passwordConfirm"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                required
                 autoComplete="new-password"
               />
               {!passwordsMatch && confirmPassword.length > 0 && (
                 <p className="text-sm text-destructive">As senhas não coincidem.</p>
+              )}
+              {fieldErrors.passwordConfirm && (
+                <p className="text-sm text-destructive">{fieldErrors.passwordConfirm}</p>
               )}
             </div>
 
@@ -132,7 +146,7 @@ export default function UpdatePasswordPage() {
             </div>
 
             <Captcha key={captchaKey} onVerify={setCaptchaVerified} />
-            {error && (
+            {error && !fieldErrors.password && !fieldErrors.passwordConfirm && (
               <p className="text-sm text-destructive text-center bg-destructive/10 rounded-md py-2 px-3">
                 {error}
               </p>
