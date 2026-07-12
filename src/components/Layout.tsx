@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import pb from '@/lib/pocketbase/client'
 import { ClinicAssistantChat } from '@/components/clinic-assistant-chat'
+import headerBanner from '@/assets/image-70721.png'
 
 const NAV_ITEMS = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -68,18 +69,14 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#EAF1EC] text-foreground flex flex-col font-sans">
-      <header className="relative w-full h-[180px] md:h-[220px] overflow-hidden bg-[radial-gradient(ellipse_at_center,_#CDE0D5_0%,_#5E806D_100%)] shrink-0 flex items-center justify-center shadow-inner">
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
-          <div className="flex items-center gap-3 md:gap-4">
-            <ShieldPlus className="w-12 h-12 md:w-16 md:h-16 text-[#1A3326]" strokeWidth={1.5} />
-            <h1 className="text-4xl md:text-[3.5rem] font-extrabold tracking-tight text-[#1A3326] drop-shadow-sm">
-              DrGestorClin
-            </h1>
-          </div>
-          <p className="text-[10px] md:text-sm font-bold tracking-[0.2em] mt-2 text-[#1A3326] drop-shadow-sm opacity-90">
-            EFICIÊNCIA EM GESTÃO DE CLÍNICAS E CONSULTÓRIOS
-          </p>
-        </div>
+      <header className="relative w-full h-[140px] sm:h-[180px] md:h-[220px] overflow-hidden shrink-0 flex items-center justify-center shadow-inner bg-[#5E806D]">
+        <Link to="/" className="absolute inset-0 z-10 block">
+          <img
+            src={headerBanner}
+            alt="DrGestorClin Banner"
+            className="w-full h-full object-cover object-center"
+          />
+        </Link>
 
         <div className="absolute top-4 right-4 flex items-center gap-3 bg-[#F4F8F6] shadow-sm px-3 py-2 rounded-full border border-white/60 z-20">
           <Button
