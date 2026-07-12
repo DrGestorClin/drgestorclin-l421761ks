@@ -52,6 +52,7 @@ onRecordAfterCreateSuccess((e) => {
         userRecord.set('name', name)
         userRecord.set('role', 'Medico')
         userRecord.set('doctor_ref', doctorId)
+        userRecord.set('force_password_change', true)
         $app.save(userRecord)
         userCreated = true
         $app.logger().info('User account created for doctor', 'email', email, 'doctor_id', doctorId)

@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ShieldAlert, Loader2, CheckCircle, Building2, Plus } from 'lucide-react'
+import { ShieldAlert, Loader2, CheckCircle, Building2, Plus, Info } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { createUser } from '@/services/users'
 import {
@@ -29,7 +29,7 @@ import { validatePassword, passwordRules } from '@/lib/password-validation'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 
-type UserType = 'ADM' | 'Medico' | 'Assistente' | 'patient'
+type UserType = 'ADM' | 'Clinica' | 'Medico' | 'Assistente' | 'patient'
 
 const LGPD_TEXT =
   'Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a responsabilidade jurídica sobre as informações inseridas são de total responsabilidade do profissional de saúde.'
@@ -93,7 +93,7 @@ export function UserCreateDialog({
   }
 
   const isPatient = userType === 'patient'
-  const needsEstablishment = userType !== 'admin'
+  const needsEstablishment = userType !== 'ADM'
   const needsPassword = !isPatient
   const passwordValid = validatePassword(password)
 
@@ -190,6 +190,15 @@ export function UserCreateDialog({
           <p className="text-xs text-amber-800">{LGPD_TEXT}</p>
         </div>
 
+        {!isPatient && (
+          <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 border border-blue-200">
+            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-800">
+              O usuário será obrigado a alterar a senha no primeiro acesso ao sistema.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>Tipo de Usuário</Label>
@@ -199,6 +208,7 @@ export function UserCreateDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ADM">Administrador</SelectItem>
+                <SelectItem value="Clinica">Clínica</SelectItem>
                 <SelectItem value="Medico">Médico</SelectItem>
                 <SelectItem value="Assistente">Atendente</SelectItem>
                 <SelectItem value="patient">Paciente</SelectItem>
@@ -256,7 +266,7 @@ export function UserCreateDialog({
             </div>
           )}
 
-          {userType === 'doctor' && (
+          {userType === 'Medico' && (
             <>
               <div className="space-y-1.5">
                 <Label>CRM</Label>
@@ -277,7 +287,7 @@ export function UserCreateDialog({
             </>
           )}
 
-          {(userType === 'doctor' || isPatient) && (
+          {(userType === 'Medico' || isPatient) && (
             <div className="space-y-1.5">
               <Label>Telefone</Label>
               <Input

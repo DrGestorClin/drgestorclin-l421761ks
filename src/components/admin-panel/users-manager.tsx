@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { getUsers, updateUserRole, deleteUser, type ClinicUser } from '@/services/users'
 import { getEstablishments, type Establishment } from '@/services/establishments'
 import { useRealtime } from '@/hooks/use-realtime'
+import { ROLE_LABELS, canManageUser, getManageableRoles } from '@/lib/roles'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -24,48 +25,45 @@ import {
   Trash2,
   ShieldCheck,
   User,
-  UserCog,
   UserPlus,
   Building2,
   Stethoscope,
+  Pencil,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { UserCreateDialog } from '@/components/admin-panel/user-create-dialog'
+import { UserEditDialog } from '@/components/admin-panel/user-edit-dialog'
 import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
 
-const ROLE_LABELS: Record<string, string> = {
-  ADM: 'Administrador',
-  Medico: 'Médico',
-  Assistente: 'Atendente',
-}
-
 const ROLE_ICONS: Record<string, React.ElementType> = {
   ADM: ShieldCheck,
-  Medico: UserCog,
+  Clinica: Building2,
   Assistente: User,
+  Medico: Stethoscope,
 }
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
   ADM: 'bg-violet-100 text-violet-700 border-violet-200',
-  Medico: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  Clinica: 'bg-teal-100 text-teal-700 border-teal-200',
   Assistente: 'bg-sky-100 text-sky-700 border-sky-200',
+  Medico: 'bg-emerald-100 text-emerald-700 border-emerald-200',
 }
 
 export function UsersManager() {
   const { toast } = useToast()
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<ClinicUser[]>([])
-  const [establishments, setEstablishments] = useState<Establishment[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editUser, setEditUser] = useState<ClinicUser | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
-      const [userData, estData] = await Promise.all([getUsers(), getEstablishments()])
-      setUsers(userData)
-      setEstablishments(estData)
+      await getUsers()
+      setUsers(await getUsers())
     } catch {
       toast({ title: 'Erro', description: 'Falha ao carregar usuários.', variant: 'destructive' })
     } finally {
@@ -78,7 +76,6 @@ export function UsersManager() {
   }, [loadData])
 
   useRealtime('users', () => loadData())
-  useRealtime('establishments', () => loadData())
 
   const grouped = useMemo(() => {
     const groups = new Map<string, { establishment: Establishment | null; users: ClinicUser[] }>()
@@ -132,6 +129,11 @@ export function UsersManager() {
     }
   }
 
+  const handleEdit = (u: ClinicUser) => {
+    setEditUser(u)
+    setEditOpen(true)
+  }
+
   const getAvatarUrl = (u: ClinicUser) =>
     u.avatar ? `${pb.baseURL}/api/files/_pb_users_auth_/${u.id}/${u.avatar}` : ''
 
@@ -143,8 +145,26 @@ export function UsersManager() {
       .join('')
       .toUpperCase() || 'U'
 
+  const getRoleOptions = (targetUser: ClinicUser) => {
+    const manageable = getManageableRoles(currentUser?.role)
+    const options = manageable.map((r) => ({
+      value: r,
+      label: ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r,
+    }))
+    if (!manageable.includes(targetUser.role)) {
+      options.unshift({
+        value: targetUser.role,
+        label: ROLE_LABELS[targetUser.role as keyof typeof ROLE_LABELS] || targetUser.role,
+      })
+    }
+    return options
+  }
+
   const renderUserRow = (u: ClinicUser) => {
     const RoleIcon = ROLE_ICONS[u.role] || User
+    const canManage = canManageUser(currentUser?.role, u.role)
+    const isSelf = u.id === currentUser?.id
+
     return (
       <div
         key={u.id}
@@ -168,7 +188,7 @@ export function UsersManager() {
                 )}
               >
                 <RoleIcon className="h-2.5 w-2.5 mr-0.5" />
-                {ROLE_LABELS[u.role] || u.role}
+                {ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || u.role}
               </Badge>
             </div>
             <p className="text-xs text-[#628471] truncate">{u.email}</p>
@@ -181,26 +201,20 @@ export function UsersManager() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Select value={u.role} onValueChange={(value) => handleRoleChange(u.id, value)}>
+          <Select
+            value={u.role}
+            onValueChange={(value) => handleRoleChange(u.id, value)}
+            disabled={!canManage || isSelf}
+          >
             <SelectTrigger className="w-[140px] h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ADM">
-                <span className="flex items-center gap-2">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Administrador
-                </span>
-              </SelectItem>
-              <SelectItem value="Medico">
-                <span className="flex items-center gap-2">
-                  <UserCog className="h-3.5 w-3.5" /> Médico
-                </span>
-              </SelectItem>
-              <SelectItem value="Assistente">
-                <span className="flex items-center gap-2">
-                  <User className="h-3.5 w-3.5" /> Atendente
-                </span>
-              </SelectItem>
+              {getRoleOptions(u).map((r) => (
+                <SelectItem key={r.value} value={r.value}>
+                  {r.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <DropdownMenu>
@@ -211,9 +225,16 @@ export function UsersManager() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => handleEdit(u)}
+                disabled={!canManage || isSelf}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 className="text-rose-600 focus:bg-rose-50 focus:text-rose-700 cursor-pointer"
                 onClick={() => handleDelete(u.id)}
-                disabled={u.id === currentUser?.id}
+                disabled={!canManage || isSelf}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Excluir
               </DropdownMenuItem>
@@ -284,6 +305,12 @@ export function UsersManager() {
       )}
 
       <UserCreateDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <UserEditDialog
+        user={editUser}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onUpdated={loadData}
+      />
     </div>
   )
 }

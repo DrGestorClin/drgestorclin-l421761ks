@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Loader2, CheckCircle, ShieldAlert } from 'lucide-react'
+import { Loader2, CheckCircle, ShieldAlert, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
@@ -162,6 +162,18 @@ export default function UpdatePasswordPage() {
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Atualizar Senha
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                signOut()
+                navigate('/login', { replace: true })
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair e Voltar para Login
             </Button>
           </form>
         </CardContent>

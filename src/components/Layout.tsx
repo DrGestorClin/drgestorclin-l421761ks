@@ -38,11 +38,11 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const location = useLocation()
-  const { user, signOut, isDoctor, isAdmin, doctor } = useAuth()
+  const { user, signOut, isDoctor, isAdmin, isClinica, doctor } = useAuth()
   const navigate = useNavigate()
 
   const navItems = NAV_ITEMS.filter((item) => {
-    if (item.title === 'Configurações' && !isAdmin) return false
+    if (item.title === 'Configurações' && !isAdmin && !isClinica) return false
     if (item.title === 'Médicos' && isDoctor) return false
     return true
   })
@@ -53,7 +53,13 @@ export default function Layout() {
   }
 
   const displayName = isDoctor && doctor ? doctor.name : user?.name || 'DrGestorClin Admin'
-  const roleName = isDoctor ? 'Médico' : isAdmin ? 'Administrador' : 'Assistente'
+  const roleName = isDoctor
+    ? 'Médico'
+    : isAdmin
+      ? 'Administrador'
+      : isClinica
+        ? 'Clínica'
+        : 'Assistente'
 
   const initials =
     displayName

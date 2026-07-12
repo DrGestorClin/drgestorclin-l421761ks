@@ -34,7 +34,7 @@ export const createUser = async (data: {
   name: string
   email: string
   password: string
-  role: 'ADM' | 'Medico' | 'Assistente'
+  role: 'ADM' | 'Clinica' | 'Medico' | 'Assistente'
   doctor_ref?: string
   establishment_ref?: string
 }): Promise<ClinicUser> =>
@@ -48,3 +48,13 @@ export const createUser = async (data: {
     establishment_ref: data.establishment_ref,
     force_password_change: true,
   })
+
+export const updateUser = async (
+  id: string,
+  data: Partial<{
+    name: string
+    role: 'ADM' | 'Clinica' | 'Medico' | 'Assistente'
+    establishment_ref: string
+    doctor_ref: string
+  }>,
+): Promise<ClinicUser> => pb.collection('users').update(id, data)

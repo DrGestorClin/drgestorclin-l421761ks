@@ -17,6 +17,7 @@ interface AuthContextType {
   user: AuthUser | null
   isAuthenticated: boolean
   isAdmin: boolean
+  isClinica: boolean
   isDoctor: boolean
   doctorId: string | null
   doctor: Doctor | null
@@ -121,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const isAdmin = user?.role === 'ADM'
+  const isClinica = user?.role === 'Clinica'
   const isDoctor = user?.role === 'Medico'
   const doctorId = user?.doctor_ref || null
   const forcePasswordChange = !!user?.force_password_change
@@ -131,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isAuthenticated,
         isAdmin,
+        isClinica,
         isDoctor,
         doctorId,
         doctor,

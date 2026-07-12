@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-07-12T04:41:05.649Z",
+  "generatedAt": "2026-07-12T05:16:15.755Z",
   "collections": [
     {
       "name": "users",
       "type": "auth",
       "apiRules": {
-        "list": "@request.auth.role = \"ADM\" || id = @request.auth.id",
-        "view": "@request.auth.role = \"ADM\" || id = @request.auth.id",
-        "create": "@request.auth.role = \"ADM\"",
-        "update": "@request.auth.role = \"ADM\" || id = @request.auth.id",
-        "delete": "@request.auth.role = \"ADM\""
+        "list": "@request.auth.role = \"ADM\" || id = @request.auth.id || (@request.auth.role = \"Clinica\" && (role = \"Assistente\" || role = \"Medico\")) || (@request.auth.role = \"Assistente\" && role = \"Medico\")",
+        "view": "@request.auth.role = \"ADM\" || id = @request.auth.id || (@request.auth.role = \"Clinica\" && (role = \"Assistente\" || role = \"Medico\")) || (@request.auth.role = \"Assistente\" && role = \"Medico\")",
+        "create": "@request.auth.role = \"ADM\" || (@request.auth.role = \"Clinica\" && (@request.body.role = \"Assistente\" || @request.body.role = \"Medico\")) || (@request.auth.role = \"Assistente\" && @request.body.role = \"Medico\")",
+        "update": "@request.auth.role = \"ADM\" || id = @request.auth.id || (@request.auth.role = \"Clinica\" && (role = \"Assistente\" || role = \"Medico\")) || (@request.auth.role = \"Assistente\" && role = \"Medico\")",
+        "delete": "@request.auth.role = \"ADM\" || (@request.auth.role = \"Clinica\" && (role = \"Assistente\" || role = \"Medico\")) || (@request.auth.role = \"Assistente\" && role = \"Medico\")"
       },
       "fields": [
         {
@@ -63,7 +63,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["ADM", "Medico", "Assistente"]
+          "selectValues": ["ADM", "Clinica", "Assistente", "Medico"]
         }
       ],
       "indexes": [
@@ -77,9 +77,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.role = \"ADM\"",
-        "update": "@request.auth.role = \"ADM\"",
-        "delete": "@request.auth.role = \"ADM\""
+        "create": "@request.auth.role = \"ADM\" || @request.auth.role = \"Clinica\" || @request.auth.role = \"Assistente\"",
+        "update": "@request.auth.role = \"ADM\" || @request.auth.role = \"Clinica\" || @request.auth.role = \"Assistente\"",
+        "delete": "@request.auth.role = \"ADM\" || @request.auth.role = \"Clinica\" || @request.auth.role = \"Assistente\""
       },
       "fields": [
         {
