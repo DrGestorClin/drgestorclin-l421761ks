@@ -24,7 +24,7 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
     return e.json(200, { success: true, message: genericMessage })
   }
 
-  var provisionalPassword = 'DrGestorClin@123'
+  var provisionalPassword = 'Skip@Pass'
   try {
     userRecord.setPassword(provisionalPassword)
     userRecord.set('force_password_change', true)
@@ -57,8 +57,8 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
         from: { address: smtpUser, name: 'DrGestorClin' },
         to: [{ address: email }],
         subject: 'DrGestorClin - Senha Provisória',
-        text: 'Sua senha provisória é: DrGestorClin@123. Por favor, altere-a após o login.',
-        html: '<p>Sua senha provisória é: <strong>DrGestorClin@123</strong>. Por favor, altere-a após o login.</p>',
+        text: 'Sua senha provisória é: Skip@Pass. Por favor, altere-a após o login.',
+        html: '<p>Sua senha provisória é: <strong>Skip@Pass</strong>. Por favor, altere-a após o login.</p>',
       })
 
       $app.logger().info('Provisional password email sent', 'email', email)
