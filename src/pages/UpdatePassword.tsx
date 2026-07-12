@@ -5,10 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Loader2, Lock, CheckCircle, ShieldAlert } from 'lucide-react'
+import { Loader2, CheckCircle, ShieldAlert } from 'lucide-react'
+import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { passwordRules } from '@/lib/password-validation'
+import { Captcha } from '@/components/captcha'
+import logoUrl from '@/assets/image-70721.png'
 
 export default function UpdatePasswordPage() {
   const { user, isAuthenticated } = useAuth()
@@ -16,6 +19,8 @@ export default function UpdatePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [captchaVerified, setCaptchaVerified] = useState(false)
+  const [captchaKey, setCaptchaKey] = useState(0)
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
@@ -23,7 +28,7 @@ export default function UpdatePasswordPage() {
 
   const passwordsMatch = newPassword === confirmPassword
   const allRulesPassed = passwordRules.every((rule) => rule.test(newPassword))
-  const canSubmit = allRulesPassed && passwordsMatch && newPassword.length > 0
+  const canSubmit = allRulesPassed && passwordsMatch && newPassword.length > 0 && captchaVerified
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,9 +44,14 @@ export default function UpdatePasswordPage() {
         force_password_change: false,
       })
       pb.authStore.save(pb.authStore.token, updated)
-      window.location.href = '/'
+      toast.success('Senha atualizada com sucesso! Redirecionando...')
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1500)
     } catch (err) {
       setError(getErrorMessage(err))
+      setCaptchaVerified(false)
+      setCaptchaKey((k) => k + 1)
     } finally {
       setLoading(false)
     }
@@ -52,9 +62,11 @@ export default function UpdatePasswordPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="rounded-full bg-[hsl(var(--brand-green-light))] p-3">
-              <Lock className="h-8 w-8 text-[hsl(var(--brand-green-dark))]" />
-            </div>
+            <img
+              src={logoUrl}
+              alt="DrGestorClin"
+              className="max-h-20 w-auto object-contain max-w-full"
+            />
           </div>
           <div>
             <CardTitle className="text-2xl">Atualização de Senha</CardTitle>
@@ -119,6 +131,7 @@ export default function UpdatePasswordPage() {
               })}
             </div>
 
+            <Captcha key={captchaKey} onVerify={setCaptchaVerified} />
             {error && (
               <p className="text-sm text-destructive text-center bg-destructive/10 rounded-md py-2 px-3">
                 {error}
