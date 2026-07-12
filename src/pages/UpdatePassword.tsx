@@ -1,27 +1,16 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Loader2, Lock, CheckCircle } from 'lucide-react'
+import { Loader2, Lock, CheckCircle, ShieldAlert } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
-
-const passwordRules = [
-  { test: (p: string) => p.length >= 8, label: 'Mínimo de 8 caracteres' },
-  { test: (p: string) => /[a-z]/.test(p), label: 'Pelo menos uma letra minúscula' },
-  { test: (p: string) => /[A-Z]/.test(p), label: 'Pelo menos uma letra maiúscula' },
-  { test: (p: string) => /[0-9]/.test(p), label: 'Pelo menos um número' },
-  {
-    test: (p: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p),
-    label: 'Pelo menos um caractere especial',
-  },
-]
+import { passwordRules } from '@/lib/password-validation'
 
 export default function UpdatePasswordPage() {
-  const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -75,6 +64,14 @@ export default function UpdatePasswordPage() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+            <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-800">
+              Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a
+              responsabilidade jurídica sobre as informações inseridas são de total responsabilidade
+              do profissional de saúde.
+            </p>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-password">Nova Senha</Label>
