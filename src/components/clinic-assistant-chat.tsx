@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Bot, X, Send, Sparkles } from 'lucide-react'
+import { Bot, X, Send, Sparkles, Stethoscope } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -96,50 +96,60 @@ export function ClinicAssistantChat() {
 
   if (!isOpen) {
     return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-brand-forest text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all animate-float flex items-center justify-center"
-        aria-label="Abrir assistente"
-      >
-        <Bot className="h-6 w-6" />
-        <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-white" />
-      </button>
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="relative">
+          <span className="absolute inset-0 rounded-full bg-brand-green/30 animate-pulse-ring" />
+          <button
+            onClick={() => setIsOpen(true)}
+            className="relative h-14 w-14 rounded-full bg-gradient-to-br from-[hsl(160_55%_42%)] to-[hsl(160_55%_32%)] text-white shadow-floating hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center ring-4 ring-white/60"
+            aria-label="Abrir assistente"
+          >
+            <Stethoscope className="h-6 w-6" />
+            <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 ring-2 ring-white" />
+          </button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col w-[calc(100vw-2rem)] sm:w-[380px] h-[60vh] max-h-[560px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-fade-in-up">
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-brand-forest to-brand-military text-white">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
-          <span className="font-bold text-sm">Assistente da Clínica</span>
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col w-[calc(100vw-2rem)] sm:w-[380px] h-[60vh] max-h-[560px] glass-panel rounded-2xl shadow-floating border border-white/40 overflow-hidden animate-fade-in-up">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[hsl(160_55%_32%)] to-[hsl(200_60%_42%)] text-white">
+        <div className="flex items-center gap-2.5">
+          <div className="rounded-lg bg-white/20 backdrop-blur-sm p-1.5">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div>
+            <span className="font-bold text-sm block leading-tight">Assistente da Clínica</span>
+            <span className="text-[10px] text-white/70 font-medium">Online agora</span>
+          </div>
         </div>
         <button
           onClick={handleClose}
-          className="hover:bg-white/20 rounded-lg p-1 transition-colors"
+          className="hover:bg-white/20 rounded-lg p-1.5 transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 no-scrollbar"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-brand-military/10 flex items-center justify-center">
-              <Bot className="h-6 w-6 text-brand-forest" />
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-brand-green-light to-sky-50 flex items-center justify-center shadow-card">
+              <Bot className="h-7 w-7 text-brand-green" />
             </div>
-            <p className="text-sm text-slate-600 font-medium">
-              Olá! Sou o Assistente da Clínica. Como posso ajudar?
-            </p>
+            <div>
+              <p className="text-sm text-foreground font-semibold">
+                Olá! Sou o Assistente da Clínica
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Como posso ajudar você hoje?</p>
+            </div>
             <div className="flex flex-col gap-2 w-full mt-2">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => handleSend(s)}
-                  className="text-left text-xs px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-brand-forest hover:text-brand-forest transition-colors"
+                  className="text-left text-xs px-3 py-2.5 rounded-xl bg-white/80 border border-border/60 hover:border-brand-green/40 hover:bg-brand-green-light/40 hover:text-brand-green-dark transition-all"
                 >
                   {s}
                 </button>
@@ -154,22 +164,22 @@ export function ClinicAssistantChat() {
             >
               <div
                 className={cn(
-                  'max-w-[85%] px-3 py-2 rounded-xl text-sm',
+                  'max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm',
                   m.role === 'user'
-                    ? 'bg-brand-forest text-white rounded-br-sm'
-                    : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm shadow-sm',
+                    ? 'bg-gradient-to-br from-[hsl(160_55%_42%)] to-[hsl(160_55%_36%)] text-white rounded-br-md shadow-card'
+                    : 'glass-panel border border-border/40 text-foreground rounded-bl-md shadow-card',
                 )}
               >
                 {m.content ||
                   (m.streaming ? (
                     <span className="inline-flex gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" />
                       <span
-                        className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce"
+                        className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
                         style={{ animationDelay: '150ms' }}
                       />
                       <span
-                        className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce"
+                        className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
                     </span>
@@ -181,7 +191,7 @@ export function ClinicAssistantChat() {
                     {m.citations.map((c) => (
                       <span
                         key={c.n}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500"
+                        className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/5 text-muted-foreground"
                       >
                         [{c.n}]
                       </span>
@@ -194,7 +204,7 @@ export function ClinicAssistantChat() {
         )}
       </div>
 
-      <div className="p-3 border-t border-slate-200 bg-white">
+      <div className="p-3 border-t border-border/40 glass-panel">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -207,13 +217,13 @@ export function ClinicAssistantChat() {
             }}
             placeholder="Digite sua pergunta..."
             disabled={isStreaming}
-            className="text-sm"
+            className="text-sm rounded-xl border-border/60 bg-white/80"
           />
           <Button
             size="icon"
             onClick={() => handleSend()}
             disabled={isStreaming || !input.trim()}
-            className="shrink-0 bg-brand-forest hover:bg-brand-military"
+            className="shrink-0 rounded-xl bg-gradient-to-br from-[hsl(160_55%_42%)] to-[hsl(160_55%_36%)] hover:from-[hsl(160_55%_38%)] hover:to-[hsl(160_55%_32%)] shadow-card"
           >
             <Send className="h-4 w-4" />
           </Button>

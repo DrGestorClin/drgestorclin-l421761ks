@@ -65,32 +65,35 @@ export default function Layout() {
     : ''
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pt-[1cm]">
-      <header className="relative w-full h-32 md:h-48 overflow-hidden bg-white shrink-0 border-b border-[#C8D5C4]">
+    <div className="min-h-screen bg-[hsl(180_20%_99%)] flex flex-col font-sans">
+      <header className="relative w-full h-28 md:h-40 overflow-hidden bg-white shrink-0 border-b border-border/60">
         <img
           src={bannerImg}
           alt="DrGestorClin Banner"
           className="w-full h-full object-contain object-center"
         />
 
-        <div className="absolute top-4 right-4 flex items-center gap-2 md:gap-3 bg-white/95 backdrop-blur shadow-sm px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-white/20">
+        <div className="absolute top-3 right-3 flex items-center gap-2 md:gap-3 glass-panel shadow-glass px-2 md:px-3 py-1.5 md:py-2 rounded-2xl border border-white/40">
           <Button
             variant="ghost"
             size="icon"
-            className="relative shrink-0 hover:bg-slate-100 transition-colors h-8 w-8 rounded-full hidden sm:flex"
+            className="relative shrink-0 hover:bg-brand-green-light transition-colors h-8 w-8 rounded-full hidden sm:flex"
           >
             <Bell className="h-4 w-4 text-brand-forest" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           </Button>
 
-          <div className="hidden sm:block h-6 w-px bg-slate-200" />
+          <div className="hidden sm:block h-6 w-px bg-border" />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 px-1 hover:bg-slate-100 h-auto py-1">
-                <Avatar className="h-8 w-8 border border-brand-military/30">
+              <Button
+                variant="ghost"
+                className="gap-2 px-1 hover:bg-brand-green-light h-auto py-1 rounded-xl"
+              >
+                <Avatar className="h-8 w-8 border-2 border-brand-green/20">
                   <AvatarImage src={avatarUrl} />
-                  <AvatarFallback className="bg-brand-military/20 text-brand-forest text-xs font-bold">
+                  <AvatarFallback className="bg-brand-green-light text-brand-green text-xs font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -98,13 +101,16 @@ export default function Layout() {
                   <span className="font-bold text-sm text-brand-forest leading-none">
                     {displayName}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                  <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
                     {isDoctor ? 'Médico' : 'Administrador'}
                   </span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent
+              align="end"
+              className="w-56 rounded-xl shadow-floating border-border/60"
+            >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{displayName}</p>
@@ -114,7 +120,7 @@ export default function Layout() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleSignOut}
-                className="text-rose-600 focus:bg-rose-50 focus:text-rose-700 font-medium cursor-pointer"
+                className="text-rose-600 focus:bg-rose-50 focus:text-rose-700 font-medium cursor-pointer rounded-lg"
               >
                 <LogOut className="mr-2 h-4 w-4" /> Sair
               </DropdownMenuItem>
@@ -123,7 +129,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <nav className="bg-[#C8D5C4] pt-3 px-4 shadow-sm relative z-40">
+      <nav className="bg-gradient-to-r from-[hsl(160_30%_88%)] via-[hsl(180_25%_92%)] to-[hsl(200_30%_90%)] pt-3 px-4 shadow-sm relative z-40 border-b border-border/40">
         <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2">
           {navItems.map((item) => {
             const isActive =
@@ -136,8 +142,8 @@ export default function Layout() {
                 className={cn(
                   'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-t-xl border border-b-0 whitespace-nowrap',
                   isActive
-                    ? 'bg-slate-50 text-[#113D24] border-[#C8D5C4] relative z-10'
-                    : 'bg-[#A8B8A4] text-[#113D24]/80 border-transparent hover:bg-[#97A892] hover:text-[#113D24]',
+                    ? 'bg-white text-brand-green border-border/40 relative z-10 shadow-sm'
+                    : 'bg-white/40 text-brand-forest/70 border-transparent hover:bg-white/70 hover:text-brand-forest backdrop-blur-sm',
                 )}
                 style={{ marginBottom: isActive ? '-1px' : '0' }}
               >

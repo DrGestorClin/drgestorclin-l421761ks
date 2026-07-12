@@ -86,6 +86,9 @@ export default {
           green: 'hsl(var(--brand-green))',
           'green-light': 'hsl(var(--brand-green-light))',
           'green-dark': 'hsl(var(--brand-green-dark))',
+          sky: 'hsl(var(--brand-sky))',
+          'sky-light': 'hsl(var(--brand-sky-light))',
+          'sky-dark': 'hsl(var(--brand-sky-dark))',
         },
       },
       borderRadius: {
@@ -100,6 +103,10 @@ export default {
       boxShadow: {
         subtle: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
         elevation: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        card: '0 2px 8px -2px rgba(0, 0, 0, 0.06), 0 1px 3px -1px rgba(0, 0, 0, 0.04)',
+        'card-hover': '0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04)',
+        glass: '0 8px 32px rgba(0, 0, 0, 0.08)',
+        floating: '0 12px 40px rgba(0, 0, 0, 0.12)',
       },
       transitionTimingFunction: {
         apple: 'cubic-bezier(0.42, 0, 0.58, 1)',
