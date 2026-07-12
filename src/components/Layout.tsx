@@ -8,8 +8,9 @@ import {
   Bell,
   LogOut,
   FileText,
+  ShieldPlus,
+  Stethoscope,
 } from 'lucide-react'
-import bannerImg from '@/assets/geminigeneratedimage2vatsw2vatsw2vat-b5266.png'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -50,7 +51,8 @@ export default function Layout() {
   }
 
   const { doctor } = useAuth()
-  const displayName = isDoctor && doctor ? doctor.name : user?.name || 'Usuário'
+  const displayName = isDoctor && doctor ? doctor.name : user?.name || 'DrGestorClin Admin'
+  const roleName = isDoctor ? 'Médico' : 'Administrator'
 
   const initials =
     displayName
@@ -58,52 +60,56 @@ export default function Layout() {
       .map((n: string) => n[0])
       .slice(0, 2)
       .join('')
-      .toUpperCase() || 'U'
+      .toUpperCase() || 'DA'
 
   const avatarUrl = user?.avatar
     ? `${pb.baseURL}/api/files/_pb_users_auth_/${user.id}/${user.avatar}`
     : ''
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-      <header className="relative w-full h-40 md:h-[220px] overflow-hidden bg-[#6D917C] shrink-0 border-b border-border/60">
-        <img
-          src={bannerImg}
-          alt="DrGestorClin Banner"
-          className="w-full h-full object-cover object-center"
-        />
+    <div className="min-h-screen bg-[#EAF1EC] text-foreground flex flex-col font-sans">
+      <header className="relative w-full h-[180px] md:h-[220px] overflow-hidden bg-[radial-gradient(ellipse_at_center,_#CDE0D5_0%,_#5E806D_100%)] shrink-0 flex items-center justify-center shadow-inner">
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
+          <div className="flex items-center gap-3 md:gap-4">
+            <ShieldPlus className="w-12 h-12 md:w-16 md:h-16 text-[#1A3326]" strokeWidth={1.5} />
+            <h1 className="text-4xl md:text-[3.5rem] font-extrabold tracking-tight text-[#1A3326] drop-shadow-sm">
+              DrGestorClin
+            </h1>
+          </div>
+          <p className="text-[10px] md:text-sm font-bold tracking-[0.2em] mt-2 text-[#1A3326] drop-shadow-sm opacity-90">
+            EFICIÊNCIA EM GESTÃO DE CLÍNICAS E CONSULTÓRIOS
+          </p>
+        </div>
 
-        <div className="absolute top-4 right-4 flex items-center gap-2 md:gap-3 bg-white/90 backdrop-blur-md shadow-sm px-2 md:px-3 py-1.5 md:py-2 rounded-2xl border border-white">
+        <div className="absolute top-4 right-4 flex items-center gap-3 bg-[#F4F8F6] shadow-sm px-3 py-2 rounded-full border border-white/60 z-20">
           <Button
             variant="ghost"
             size="icon"
-            className="relative shrink-0 hover:bg-black/5 transition-colors h-8 w-8 rounded-full hidden sm:flex"
+            className="relative shrink-0 hover:bg-black/5 transition-colors h-9 w-9 rounded-full hidden sm:flex text-[#5A7B68]"
           >
-            <Bell className="h-4 w-4 text-brand-forest" />
-            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-rose-500 border border-white" />
           </Button>
 
-          <div className="hidden sm:block h-6 w-px bg-brand-forest/20" />
+          <div className="hidden sm:block h-8 w-px bg-black/10" />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="gap-2 px-1 hover:bg-black/5 h-auto py-1 rounded-xl"
+                className="gap-3 px-1 hover:bg-black/5 h-auto py-1 rounded-full"
               >
-                <Avatar className="h-8 w-8 border border-brand-green/20">
+                <Avatar className="h-9 w-9 border border-[#CDE0D5]">
                   <AvatarImage src={avatarUrl} />
-                  <AvatarFallback className="bg-brand-green-light text-brand-green text-xs font-bold">
+                  <AvatarFallback className="bg-[#E5EFE9] text-[#4A6455] text-sm font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden md:flex flex-col items-start">
-                  <span className="font-bold text-sm text-brand-forest leading-none">
+                <div className="hidden md:flex flex-col items-start pr-2">
+                  <span className="font-bold text-sm text-[#2A4434] leading-none">
                     {displayName}
                   </span>
-                  <span className="text-[10px] text-brand-forest/70 font-medium mt-0.5">
-                    {isDoctor ? 'Médico' : 'Administrador'}
-                  </span>
+                  <span className="text-[11px] text-[#4A6455] font-medium mt-1">{roleName}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -129,8 +135,8 @@ export default function Layout() {
         </div>
       </header>
 
-      <nav className="bg-[#6D917C] dark:bg-[#2C4A3B] pt-3 px-4 shadow-sm relative z-40 border-b border-[#5C7D69] dark:border-[#1E362A]">
-        <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2">
+      <nav className="bg-[#668A75] px-4 shadow-sm relative z-40 border-b border-[#5E806D]/30">
+        <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2 pt-3">
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.url ||
@@ -140,12 +146,11 @@ export default function Layout() {
                 key={item.title}
                 to={item.url}
                 className={cn(
-                  'flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all rounded-t-xl whitespace-nowrap border-x border-t border-transparent',
+                  'flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all rounded-t-xl whitespace-nowrap',
                   isActive
-                    ? 'bg-background text-brand-forest border-[#5C7D69] dark:border-[#1E362A] relative z-10 shadow-[0_-2px_4px_rgba(0,0,0,0.02)]'
-                    : 'text-white/90 hover:bg-white/10 hover:text-white',
+                    ? 'bg-[#EAF1EC] text-[#2A4434]'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white',
                 )}
-                style={{ marginBottom: isActive ? '-1px' : '0' }}
               >
                 <item.icon className={cn('h-4 w-4', isActive ? 'stroke-[2.5px]' : 'stroke-2')} />
                 {item.title}
@@ -155,11 +160,21 @@ export default function Layout() {
         </div>
       </nav>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 animate-fade-in pb-20">
         <Outlet />
       </main>
 
       <ClinicAssistantChat />
+
+      {/* FAB - purely visual as per AC, standard pointer-events so it acts like a normal floating element */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          size="icon"
+          className="w-14 h-14 rounded-full bg-[#3B9169] hover:bg-[#28533D] shadow-lg shadow-[#3B9169]/30 text-white"
+        >
+          <Stethoscope className="w-6 h-6" />
+        </Button>
+      </div>
     </div>
   )
 }
