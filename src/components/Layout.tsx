@@ -9,7 +9,7 @@ import {
   LogOut,
   FileText,
 } from 'lucide-react'
-import bannerImg from '@/assets/geminigeneratedimage5b1iqv5b1iqv5b1i-49736.png'
+import bannerImg from '@/assets/codegeneratedimage-75c86.jpeg'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -65,8 +65,8 @@ export default function Layout() {
     : ''
 
   return (
-    <div className="min-h-screen bg-[hsl(180_20%_99%)] flex flex-col font-sans">
-      <header className="relative w-full h-28 md:h-40 overflow-hidden bg-brand-forest shrink-0 border-b border-border/60">
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(160_30%_88%)] via-[hsl(180_25%_92%)] to-[hsl(200_30%_90%)] dark:from-[#1a2421] dark:via-[#1c2624] dark:to-[#1a2226] flex flex-col font-sans">
+      <header className="relative w-full h-36 md:h-[200px] overflow-hidden bg-brand-forest shrink-0 border-b border-border/60">
         <img
           src={bannerImg}
           alt="DrGestorClin Banner"
@@ -129,7 +129,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <nav className="bg-gradient-to-r from-[hsl(160_30%_88%)] via-[hsl(180_25%_92%)] to-[hsl(200_30%_90%)] pt-3 px-4 shadow-sm relative z-40 border-b border-border/40">
+      <nav className="bg-[#5B8266] dark:bg-[#2C4A3B] pt-3 px-4 shadow-md relative z-40 border-b border-[#4A6D53] dark:border-[#1E362A]">
         <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2">
           {navItems.map((item) => {
             const isActive =
@@ -142,8 +142,8 @@ export default function Layout() {
                 className={cn(
                   'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-t-xl border border-b-0 whitespace-nowrap',
                   isActive
-                    ? 'bg-white text-brand-green border-border/40 relative z-10 shadow-sm'
-                    : 'bg-white/40 text-brand-forest/70 border-transparent hover:bg-white/70 hover:text-brand-forest backdrop-blur-sm',
+                    ? 'bg-gradient-to-b from-[hsl(160_30%_88%)] to-[hsl(180_25%_92%)] dark:from-[#1a2421] dark:to-[#1c2624] text-brand-forest dark:text-brand-green-light border-[#4A6D53] dark:border-[#1E362A] relative z-10'
+                    : 'bg-black/5 dark:bg-white/5 text-white/80 border-transparent hover:bg-black/10 dark:hover:bg-white/10 hover:text-white backdrop-blur-sm',
                 )}
                 style={{ marginBottom: isActive ? '-1px' : '0' }}
               >
