@@ -66,11 +66,11 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[hsl(180_20%_99%)] flex flex-col font-sans">
-      <header className="relative w-full h-28 md:h-40 overflow-hidden bg-white shrink-0 border-b border-border/60">
+      <header className="relative w-full h-28 md:h-40 overflow-hidden bg-brand-forest shrink-0 border-b border-border/60">
         <img
           src={bannerImg}
           alt="DrGestorClin Banner"
-          className="w-full h-full object-contain object-center"
+          className="w-full h-full object-cover object-center"
         />
 
         <div className="absolute top-3 right-3 flex items-center gap-2 md:gap-3 glass-panel shadow-glass px-2 md:px-3 py-1.5 md:py-2 rounded-2xl border border-white/40">
