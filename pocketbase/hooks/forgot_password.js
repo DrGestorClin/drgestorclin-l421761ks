@@ -20,7 +20,7 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
     role = userRecord.get('role') || ''
   } catch (_) {}
 
-  if (role !== 'admin' && role !== 'doctor') {
+  if (role !== 'ADM' && role !== 'Medico') {
     return e.json(200, { success: true, message: genericMessage })
   }
 

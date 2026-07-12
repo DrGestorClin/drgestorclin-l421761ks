@@ -8,7 +8,7 @@ routerAdd(
     try {
       userRole = e.auth.get('role') || ''
     } catch (_) {}
-    if (userRole !== 'admin') return e.forbiddenError('admin access required')
+    if (userRole !== 'ADM') return e.forbiddenError('admin access required')
 
     var body = e.requestInfo().body || {}
     var toEmail = (body.email || '').trim()

@@ -53,7 +53,7 @@ export default function Layout() {
   }
 
   const displayName = isDoctor && doctor ? doctor.name : user?.name || 'DrGestorClin Admin'
-  const roleName = isDoctor ? 'Médico' : 'Administrator'
+  const roleName = isDoctor ? 'Médico' : isAdmin ? 'Administrador' : 'Assistente'
 
   const initials =
     displayName

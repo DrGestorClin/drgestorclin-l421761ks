@@ -40,7 +40,7 @@ onRecordAfterUpdateSuccess((e) => {
     return e.next()
   }
 
-  var adminEmail = 'comercial@drgestorclin.com'
+  var adminEmail = 'drgestorclin@gmail.com'
 
   try {
     var userText =

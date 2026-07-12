@@ -52,10 +52,10 @@ export default function UpdatePasswordPage() {
         force_password_change: false,
       })
       pb.authStore.clear()
-      toast.success('Senha atualizada com sucesso! Redirecionando para o login...')
+      toast.success('Sua senha foi alterada com sucesso!')
       setTimeout(() => {
         window.location.href = '/login'
-      }, 1500)
+      }, 2000)
     } catch (err) {
       const fieldErrs = extractFieldErrors(err)
       if (Object.keys(fieldErrs).length > 0) {

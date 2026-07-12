@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
         passwordConfirm: password,
-        role: 'staff',
+        role: 'Assistente',
       })
       await pb.collection('users').authWithPassword(email, password)
       return { error: null }
@@ -116,8 +116,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     pb.authStore.clear()
   }
 
-  const isAdmin = user?.role === 'admin'
-  const isDoctor = user?.role === 'doctor'
+  const isAdmin = user?.role === 'ADM'
+  const isDoctor = user?.role === 'Medico'
   const doctorId = user?.doctor_ref || null
   const forcePasswordChange = !!user?.force_password_change
 
