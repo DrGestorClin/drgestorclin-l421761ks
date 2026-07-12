@@ -14,7 +14,7 @@ import { Captcha } from '@/components/captcha'
 import logoUrl from '@/assets/image-70721.png'
 
 export default function UpdatePasswordPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, forcePasswordChange, signOut } = useAuth()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,28 +27,38 @@ export default function UpdatePasswordPage() {
     return <Navigate to="/login" replace />
   }
 
+  if (!forcePasswordChange) {
+    return <Navigate to="/" replace />
+  }
+
   const passwordsMatch = newPassword === confirmPassword
   const allRulesPassed = passwordRules.every((rule) => rule.test(newPassword))
-  const canSubmit = allRulesPassed && passwordsMatch && newPassword.length > 0 && captchaVerified
+  const canSubmit =
+    allRulesPassed &&
+    passwordsMatch &&
+    newPassword.trim().length > 0 &&
+    confirmPassword.trim().length > 0 &&
+    captchaVerified
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit || !user) return
+    if (!newPassword.trim() || !confirmPassword.trim()) return
 
     setLoading(true)
     setError('')
     setFieldErrors({})
 
     try {
-      const updated = await pb.collection('users').update(user.id, {
-        password: newPassword,
-        passwordConfirm: confirmPassword,
+      await pb.collection('users').update(user.id, {
+        password: newPassword.trim(),
+        passwordConfirm: confirmPassword.trim(),
         force_password_change: false,
       })
-      pb.authStore.save(pb.authStore.token, updated)
-      toast.success('Senha atualizada com sucesso! Redirecionando...')
+      signOut()
+      toast.success('Senha atualizada com sucesso! Redirecionando para o login...')
       setTimeout(() => {
-        window.location.href = '/'
+        window.location.href = '/login'
       }, 1500)
     } catch (err) {
       const fieldErrs = extractFieldErrors(err)
