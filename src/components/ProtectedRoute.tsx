@@ -4,8 +4,14 @@ import { ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 
-export function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
-  const { isAuthenticated, isAdmin, loading } = useAuth()
+export function ProtectedRoute({
+  adminOnly = false,
+  forcePasswordChangeGuard = false,
+}: {
+  adminOnly?: boolean
+  forcePasswordChangeGuard?: boolean
+}) {
+  const { isAuthenticated, isAdmin, loading, forcePasswordChange } = useAuth()
 
   if (loading) {
     return (
@@ -17,6 +23,10 @@ export function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
+  }
+
+  if (forcePasswordChangeGuard && forcePasswordChange) {
+    return <Navigate to="/update-password" replace />
   }
 
   if (adminOnly && !isAdmin) {

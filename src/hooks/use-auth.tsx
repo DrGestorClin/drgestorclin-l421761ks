@@ -8,6 +8,7 @@ interface AuthUser {
   role: string
   avatar?: string
   doctor_ref?: string
+  force_password_change?: boolean
 }
 
 import { getDoctor, type Doctor } from '@/services/doctors'
@@ -19,7 +20,11 @@ interface AuthContextType {
   isDoctor: boolean
   doctorId: string | null
   doctor: Doctor | null
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  forcePasswordChange: boolean
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: any; forcePasswordChange?: boolean }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signInWith: (provider: string) => Promise<{ error: any }>
   signOut: () => void
@@ -76,7 +81,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       await pb.collection('users').authWithPassword(email, password)
-      return { error: null }
+      const record = pb.authStore.record as unknown as AuthUser
+      return { error: null, forcePasswordChange: !!record?.force_password_change }
     } catch (error) {
       return { error }
     }
@@ -113,6 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAdmin = user?.role === 'admin'
   const isDoctor = user?.role === 'doctor'
   const doctorId = user?.doctor_ref || null
+  const forcePasswordChange = !!user?.force_password_change
 
   return (
     <AuthContext.Provider
@@ -123,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isDoctor,
         doctorId,
         doctor,
+        forcePasswordChange,
         signIn,
         signUp,
         signInWith,

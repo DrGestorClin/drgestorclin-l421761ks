@@ -15,6 +15,7 @@ import SettingsPage from './pages/settings/SettingsPage'
 import LoginPage from './pages/Login'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import UpdatePasswordPage from './pages/UpdatePassword'
 
 const App = () => (
   <BrowserRouter>
@@ -25,15 +26,18 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/doctors" element={<DoctorsPage />} />
-              <Route path="/patients" element={<PatientsPage />} />
-              <Route path="/patients/:id" element={<PatientDetailPage />} />
-              <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/agenda" element={<AgendaPage />} />
-              <Route path="/consultation/:id" element={<ConsultationPage />} />
+            <Route path="/update-password" element={<UpdatePasswordPage />} />
+            <Route element={<ProtectedRoute forcePasswordChangeGuard />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/doctors" element={<DoctorsPage />} />
+                <Route path="/patients" element={<PatientsPage />} />
+                <Route path="/patients/:id" element={<PatientDetailPage />} />
+                <Route path="/templates" element={<TemplatesPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/agenda" element={<AgendaPage />} />
+                <Route path="/consultation/:id" element={<ConsultationPage />} />
+              </Route>
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
