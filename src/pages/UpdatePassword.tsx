@@ -10,7 +10,6 @@ import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage, extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 import { passwordRules } from '@/lib/password-validation'
-import { Captcha } from '@/components/captcha'
 import logoUrl from '@/assets/image-70721.png'
 
 export default function UpdatePasswordPage() {
@@ -20,8 +19,6 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-  const [captchaVerified, setCaptchaVerified] = useState(false)
-  const [captchaKey, setCaptchaKey] = useState(0)
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
@@ -37,8 +34,7 @@ export default function UpdatePasswordPage() {
     allRulesPassed &&
     passwordsMatch &&
     newPassword.trim().length > 0 &&
-    confirmPassword.trim().length > 0 &&
-    captchaVerified
+    confirmPassword.trim().length > 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +51,7 @@ export default function UpdatePasswordPage() {
         passwordConfirm: confirmPassword.trim(),
         force_password_change: false,
       })
-      signOut()
+      pb.authStore.clear()
       toast.success('Senha atualizada com sucesso! Redirecionando para o login...')
       setTimeout(() => {
         window.location.href = '/login'
@@ -68,8 +64,6 @@ export default function UpdatePasswordPage() {
       } else {
         setError(getErrorMessage(err))
       }
-      setCaptchaVerified(false)
-      setCaptchaKey((k) => k + 1)
     } finally {
       setLoading(false)
     }
@@ -155,7 +149,6 @@ export default function UpdatePasswordPage() {
               })}
             </div>
 
-            <Captcha key={captchaKey} onVerify={setCaptchaVerified} />
             {error && !fieldErrors.password && !fieldErrors.passwordConfirm && (
               <p className="text-sm text-destructive text-center bg-destructive/10 rounded-md py-2 px-3">
                 {error}

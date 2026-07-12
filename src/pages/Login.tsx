@@ -16,7 +16,6 @@ import { Loader2, MailCheck, KeyRound } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { forgotPassword } from '@/services/auth'
 import logoUrl from '@/assets/image-70721.png'
-import { Captcha } from '@/components/captcha'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -31,8 +30,6 @@ export default function LoginPage() {
   const [forgotLoading, setForgotLoading] = useState(false)
   const [forgotSuccess, setForgotSuccess] = useState(false)
   const [forgotError, setForgotError] = useState('')
-  const [captchaVerified, setCaptchaVerified] = useState(false)
-  const [captchaKey, setCaptchaKey] = useState(0)
   const redirectHandled = useRef(false)
 
   useEffect(() => {
@@ -50,8 +47,6 @@ export default function LoginPage() {
     if (error) {
       setError(getErrorMessage(error))
       setLoading(false)
-      setCaptchaVerified(false)
-      setCaptchaKey((k) => k + 1)
     } else {
       redirectHandled.current = true
       navigate(fpc ? '/update-password' : '/')
@@ -135,7 +130,6 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
-            <Captcha key={captchaKey} onVerify={setCaptchaVerified} />
             {error && (
               <p className="text-sm text-destructive text-center bg-destructive/10 rounded-md py-2 px-3">
                 {error}
@@ -144,7 +138,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-[hsl(var(--brand-green))] hover:bg-[hsl(var(--brand-green-dark))] text-white"
-              disabled={loading || !captchaVerified}
+              disabled={loading}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Entrar
@@ -175,7 +169,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={handleGoogle}
-            disabled={oauthLoading || !captchaVerified}
+            disabled={oauthLoading}
           >
             {oauthLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

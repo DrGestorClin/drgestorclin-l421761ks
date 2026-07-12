@@ -2,8 +2,6 @@ onRecordAfterUpdateSuccess((e) => {
   var originalForceChange = e.record.original().getBool('force_password_change')
   var currentForceChange = e.record.getBool('force_password_change')
 
-  // Only fire when force_password_change goes from true to false
-  // (which happens during the password update flow)
   if (!originalForceChange || currentForceChange) {
     return e.next()
   }
@@ -42,13 +40,15 @@ onRecordAfterUpdateSuccess((e) => {
     return e.next()
   }
 
+  var adminEmail = 'comercial@drgestorclin.com'
+
   try {
-    var emailText =
+    var userText =
       'Olá ' +
       name +
       ',\n\nSua senha foi atualizada com sucesso no DrGestorClin. Se você não realizou esta alteração, entre em contato imediatamente com o administrador do sistema.\n\nAtenciosamente,\nEquipe DrGestorClin'
 
-    var emailHtml =
+    var userHtml =
       '<p>Olá ' +
       name +
       ',</p><p>Sua senha foi atualizada com sucesso no <strong>DrGestorClin</strong>.</p><p>Se você não realizou esta alteração, entre em contato imediatamente com o administrador do sistema.</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
@@ -57,21 +57,72 @@ onRecordAfterUpdateSuccess((e) => {
       from: { address: smtpUser, name: 'DrGestorClin' },
       to: [{ address: email }],
       subject: 'DrGestorClin - Senha Atualizada com Sucesso',
-      text: emailText,
-      html: emailHtml,
+      text: userText,
+      html: userHtml,
     })
 
-    $app.logger().info('Password update confirmation email sent', 'email', email, 'user_id', userId)
+    $app
+      .logger()
+      .info('Password update confirmation email sent to user', 'email', email, 'user_id', userId)
   } catch (err) {
-    var errorMsg = (err && err.message) || ''
     $app
       .logger()
       .error(
-        'Failed to send password update confirmation email',
+        'Failed to send password update confirmation email to user',
         'error',
-        errorMsg,
+        (err && err.message) || '',
         'email',
         email,
+        'user_id',
+        userId,
+      )
+  }
+
+  try {
+    var adminText =
+      'Olá Administrador,\n\nO usuário ' +
+      name +
+      ' (' +
+      email +
+      ') atualizou sua senha com sucesso no DrGestorClin.\n\nData da alteração: ' +
+      new Date().toISOString() +
+      '\n\nAtenciosamente,\nEquipe DrGestorClin'
+
+    var adminHtml =
+      '<p>Olá Administrador,</p><p>O usuário <strong>' +
+      name +
+      '</strong> (' +
+      email +
+      ') atualizou sua senha com sucesso no <strong>DrGestorClin</strong>.</p><p><strong>Data da alteração:</strong> ' +
+      new Date().toISOString() +
+      '</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
+
+    $app.newMailClient().send({
+      from: { address: smtpUser, name: 'DrGestorClin' },
+      to: [{ address: adminEmail }],
+      subject: 'DrGestorClin - Confirmação de Alteração de Senha',
+      text: adminText,
+      html: adminHtml,
+    })
+
+    $app
+      .logger()
+      .info(
+        'Password update notification sent to admin',
+        'admin_email',
+        adminEmail,
+        'user_id',
+        userId,
+      )
+  } catch (err) {
+    $app
+      .logger()
+      .error(
+        'Failed to send password update notification to admin',
+        'error',
+        (err && err.message) || '',
+        'admin_email',
+        adminEmail,
         'user_id',
         userId,
       )
