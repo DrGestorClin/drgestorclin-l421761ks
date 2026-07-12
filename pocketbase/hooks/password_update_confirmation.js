@@ -6,6 +6,25 @@ onRecordAfterUpdateSuccess((e) => {
     return e.next()
   }
 
+  try {
+    var auditCol = $app.findCollectionByNameOrId('audit_logs')
+    var auditRecord = new Record(auditCol)
+    auditRecord.set('user', e.record.id)
+    auditRecord.set('action', 'PASSWORD_CHANGE')
+    auditRecord.set('resource', 'users')
+    auditRecord.set('resource_id', e.record.id)
+    auditRecord.set('details', 'Senha atualizada pelo usuário')
+    $app.save(auditRecord)
+  } catch (auditErr) {
+    $app
+      .logger()
+      .error(
+        'Failed to create audit log for password change',
+        'error',
+        (auditErr && auditErr.message) || '',
+      )
+  }
+
   var email = e.record.getString('email')
   var name = e.record.getString('name') || 'Usuário'
   var userId = e.record.id

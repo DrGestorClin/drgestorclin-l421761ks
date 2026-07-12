@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,7 @@ import logoUrl from '@/assets/image-70721.png'
 
 export default function UpdatePasswordPage() {
   const { user, isAuthenticated, forcePasswordChange, signOut } = useAuth()
+  const navigate = useNavigate()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,7 +55,7 @@ export default function UpdatePasswordPage() {
       pb.authStore.clear()
       toast.success('Sua senha foi alterada com sucesso!')
       setTimeout(() => {
-        window.location.href = '/login'
+        navigate('/login', { replace: true })
       }, 2000)
     } catch (err) {
       const fieldErrs = extractFieldErrors(err)

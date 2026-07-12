@@ -34,7 +34,7 @@ export const createUser = async (data: {
   name: string
   email: string
   password: string
-  role: 'admin' | 'doctor' | 'staff'
+  role: 'ADM' | 'Medico' | 'Assistente'
   doctor_ref?: string
   establishment_ref?: string
 }): Promise<ClinicUser> =>

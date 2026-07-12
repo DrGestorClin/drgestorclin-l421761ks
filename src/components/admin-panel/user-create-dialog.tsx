@@ -29,7 +29,7 @@ import { validatePassword, passwordRules } from '@/lib/password-validation'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 
-type UserType = 'admin' | 'doctor' | 'staff' | 'patient'
+type UserType = 'ADM' | 'Medico' | 'Assistente' | 'patient'
 
 const LGPD_TEXT =
   'Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a responsabilidade jurídica sobre as informações inseridas são de total responsabilidade do profissional de saúde.'
@@ -44,7 +44,7 @@ export function UserCreateDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const { toast } = useToast()
-  const [userType, setUserType] = useState<UserType>('staff')
+  const [userType, setUserType] = useState<UserType>('Assistente')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -76,7 +76,7 @@ export function UserCreateDialog({
   const filteredEst = establishments.filter((e) => estFilter === 'all' || e.type === estFilter)
 
   const resetForm = () => {
-    setUserType('staff')
+    setUserType('Assistente')
     setName('')
     setEmail('')
     setPassword('')
@@ -106,7 +106,7 @@ export function UserCreateDialog({
     name.trim() &&
     email.trim() &&
     (isPatient || passwordValid) &&
-    (userType !== 'doctor' || (crm.trim() && specialty.trim())) &&
+    (userType !== 'Medico' || (crm.trim() && specialty.trim())) &&
     establishmentValid &&
     (!isPatient || selectedDoctor),
   )
@@ -134,7 +134,7 @@ export function UserCreateDialog({
           doctor: selectedDoctor,
           establishment_ref: estId,
         })
-      } else if (userType === 'doctor') {
+      } else if (userType === 'Medico') {
         const doctor = await pb.collection('doctors').create({
           name: name.trim(),
           crm: crm.trim(),
@@ -148,7 +148,7 @@ export function UserCreateDialog({
           name: name.trim(),
           email: email.trim(),
           password,
-          role: 'doctor',
+          role: 'Medico',
           doctor_ref: doctor.id,
           establishment_ref: estId,
         })
@@ -198,9 +198,9 @@ export function UserCreateDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="doctor">Médico</SelectItem>
-                <SelectItem value="staff">Atendente</SelectItem>
+                <SelectItem value="ADM">Administrador</SelectItem>
+                <SelectItem value="Medico">Médico</SelectItem>
+                <SelectItem value="Assistente">Atendente</SelectItem>
                 <SelectItem value="patient">Paciente</SelectItem>
               </SelectContent>
             </Select>

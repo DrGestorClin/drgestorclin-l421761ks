@@ -50,7 +50,7 @@ onRecordAfterCreateSuccess((e) => {
         userRecord.setPassword(tempPassword)
         userRecord.setVerified(true)
         userRecord.set('name', name)
-        userRecord.set('role', 'doctor')
+        userRecord.set('role', 'Medico')
         userRecord.set('doctor_ref', doctorId)
         $app.save(userRecord)
         userCreated = true

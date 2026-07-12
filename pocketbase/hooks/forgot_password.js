@@ -24,13 +24,34 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
     return e.json(200, { success: true, message: genericMessage })
   }
 
-  var provisionalPassword = 'Skip@Pass'
+  var provisionalPassword = $security.randomString(16)
   try {
     userRecord.setPassword(provisionalPassword)
     userRecord.set('force_password_change', true)
     $app.save(userRecord)
+
+    try {
+      var auditCol = $app.findCollectionByNameOrId('audit_logs')
+      var auditRecord = new Record(auditCol)
+      auditRecord.set('user', userRecord.id)
+      auditRecord.set('action', 'PASSWORD_RESET')
+      auditRecord.set('resource', 'users')
+      auditRecord.set('resource_id', userRecord.id)
+      auditRecord.set('details', 'Senha provisória enviada por e-mail')
+      $app.save(auditRecord)
+    } catch (auditErr) {
+      $app
+        .logger()
+        .error(
+          'Failed to create audit log for password reset',
+          'error',
+          (auditErr && auditErr.message) || '',
+        )
+    }
   } catch (err) {
-    $app.logger().error('Failed to reset password', 'error', err.message, 'email', email)
+    $app
+      .logger()
+      .error('Failed to reset password', 'error', (err && err.message) || '', 'email', email)
     return e.json(500, {
       success: false,
       message: 'Erro ao redefinir a senha. Tente novamente.',
@@ -57,8 +78,12 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
         from: { address: smtpUser, name: 'DrGestorClin' },
         to: [{ address: email }],
         subject: 'DrGestorClin - Senha Provisória',
-        text: 'Sua senha provisória é: Skip@Pass. Por favor, altere-a após o login.',
-        html: '<p>Sua senha provisória é: <strong>Skip@Pass</strong>. Por favor, altere-a após o login.</p>',
+        text:
+          'Sua senha provisória é: ' + provisionalPassword + '. Por favor, altere-a após o login.',
+        html:
+          '<p>Sua senha provisória é: <strong>' +
+          provisionalPassword +
+          '</strong>. Por favor, altere-a após o login.</p>',
       })
 
       $app.logger().info('Provisional password email sent', 'email', email)

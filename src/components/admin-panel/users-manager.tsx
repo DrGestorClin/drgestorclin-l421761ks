@@ -36,21 +36,21 @@ import pb from '@/lib/pocketbase/client'
 import { cn } from '@/lib/utils'
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrador',
-  doctor: 'Médico',
-  staff: 'Atendente',
+  ADM: 'Administrador',
+  Medico: 'Médico',
+  Assistente: 'Atendente',
 }
 
 const ROLE_ICONS: Record<string, React.ElementType> = {
-  admin: ShieldCheck,
-  doctor: UserCog,
-  staff: User,
+  ADM: ShieldCheck,
+  Medico: UserCog,
+  Assistente: User,
 }
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
-  admin: 'bg-violet-100 text-violet-700 border-violet-200',
-  doctor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  staff: 'bg-sky-100 text-sky-700 border-sky-200',
+  ADM: 'bg-violet-100 text-violet-700 border-violet-200',
+  Medico: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  Assistente: 'bg-sky-100 text-sky-700 border-sky-200',
 }
 
 export function UsersManager() {
@@ -172,7 +172,7 @@ export function UsersManager() {
               </Badge>
             </div>
             <p className="text-xs text-[#628471] truncate">{u.email}</p>
-            {u.role === 'doctor' && u.expand?.doctor_ref && (
+            {u.role === 'Medico' && u.expand?.doctor_ref && (
               <p className="text-[11px] text-[#8A9E92] flex items-center gap-1 mt-0.5">
                 <Stethoscope className="h-3 w-3" />
                 {u.expand.doctor_ref.specialty}
@@ -186,17 +186,17 @@ export function UsersManager() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">
+              <SelectItem value="ADM">
                 <span className="flex items-center gap-2">
                   <ShieldCheck className="h-3.5 w-3.5" /> Administrador
                 </span>
               </SelectItem>
-              <SelectItem value="doctor">
+              <SelectItem value="Medico">
                 <span className="flex items-center gap-2">
                   <UserCog className="h-3.5 w-3.5" /> Médico
                 </span>
               </SelectItem>
-              <SelectItem value="staff">
+              <SelectItem value="Assistente">
                 <span className="flex items-center gap-2">
                   <User className="h-3.5 w-3.5" /> Atendente
                 </span>
