@@ -9,7 +9,7 @@ import {
   LogOut,
   FileText,
 } from 'lucide-react'
-import bannerImg from '@/assets/codegeneratedimage-75c86.jpeg'
+import bannerImg from '@/assets/geminigeneratedimage2vatsw2vatsw2vat-b5266.png'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -65,33 +65,33 @@ export default function Layout() {
     : ''
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(160_30%_88%)] via-[hsl(180_25%_92%)] to-[hsl(200_30%_90%)] dark:from-[#1a2421] dark:via-[#1c2624] dark:to-[#1a2226] flex flex-col font-sans">
-      <header className="relative w-full h-36 md:h-[200px] overflow-hidden bg-brand-forest shrink-0 border-b border-border/60">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+      <header className="relative w-full h-40 md:h-[220px] overflow-hidden bg-[#6D917C] shrink-0 border-b border-border/60">
         <img
           src={bannerImg}
           alt="DrGestorClin Banner"
           className="w-full h-full object-cover object-center"
         />
 
-        <div className="absolute top-3 right-3 flex items-center gap-2 md:gap-3 glass-panel shadow-glass px-2 md:px-3 py-1.5 md:py-2 rounded-2xl border border-white/40">
+        <div className="absolute top-4 right-4 flex items-center gap-2 md:gap-3 bg-white/90 backdrop-blur-md shadow-sm px-2 md:px-3 py-1.5 md:py-2 rounded-2xl border border-white">
           <Button
             variant="ghost"
             size="icon"
-            className="relative shrink-0 hover:bg-brand-green-light transition-colors h-8 w-8 rounded-full hidden sm:flex"
+            className="relative shrink-0 hover:bg-black/5 transition-colors h-8 w-8 rounded-full hidden sm:flex"
           >
             <Bell className="h-4 w-4 text-brand-forest" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
           </Button>
 
-          <div className="hidden sm:block h-6 w-px bg-border" />
+          <div className="hidden sm:block h-6 w-px bg-brand-forest/20" />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="gap-2 px-1 hover:bg-brand-green-light h-auto py-1 rounded-xl"
+                className="gap-2 px-1 hover:bg-black/5 h-auto py-1 rounded-xl"
               >
-                <Avatar className="h-8 w-8 border-2 border-brand-green/20">
+                <Avatar className="h-8 w-8 border border-brand-green/20">
                   <AvatarImage src={avatarUrl} />
                   <AvatarFallback className="bg-brand-green-light text-brand-green text-xs font-bold">
                     {initials}
@@ -101,7 +101,7 @@ export default function Layout() {
                   <span className="font-bold text-sm text-brand-forest leading-none">
                     {displayName}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                  <span className="text-[10px] text-brand-forest/70 font-medium mt-0.5">
                     {isDoctor ? 'Médico' : 'Administrador'}
                   </span>
                 </div>
@@ -129,7 +129,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <nav className="bg-[#5B8266] dark:bg-[#2C4A3B] pt-3 px-4 shadow-md relative z-40 border-b border-[#4A6D53] dark:border-[#1E362A]">
+      <nav className="bg-[#6D917C] dark:bg-[#2C4A3B] pt-3 px-4 shadow-sm relative z-40 border-b border-[#5C7D69] dark:border-[#1E362A]">
         <div className="flex items-end gap-1 overflow-x-auto no-scrollbar max-w-7xl mx-auto w-full px-2">
           {navItems.map((item) => {
             const isActive =
@@ -140,10 +140,10 @@ export default function Layout() {
                 key={item.title}
                 to={item.url}
                 className={cn(
-                  'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-t-xl border border-b-0 whitespace-nowrap',
+                  'flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all rounded-t-xl whitespace-nowrap border-x border-t border-transparent',
                   isActive
-                    ? 'bg-gradient-to-b from-[hsl(160_30%_88%)] to-[hsl(180_25%_92%)] dark:from-[#1a2421] dark:to-[#1c2624] text-brand-forest dark:text-brand-green-light border-[#4A6D53] dark:border-[#1E362A] relative z-10'
-                    : 'bg-black/5 dark:bg-white/5 text-white/80 border-transparent hover:bg-black/10 dark:hover:bg-white/10 hover:text-white backdrop-blur-sm',
+                    ? 'bg-background text-brand-forest border-[#5C7D69] dark:border-[#1E362A] relative z-10 shadow-[0_-2px_4px_rgba(0,0,0,0.02)]'
+                    : 'text-white/90 hover:bg-white/10 hover:text-white',
                 )}
                 style={{ marginBottom: isActive ? '-1px' : '0' }}
               >

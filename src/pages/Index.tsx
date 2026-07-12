@@ -33,33 +33,31 @@ function StatCard({
   value,
   icon: Icon,
   loading,
-  gradient,
-  iconBg,
+  bgColor,
   delay,
 }: {
   title: string
   value: string | number
   icon: React.ElementType
   loading: boolean
-  gradient: string
-  iconBg: string
+  bgColor: string
   delay: number
 }) {
   return (
     <Card
       className={cn(
-        'relative overflow-hidden border-none shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-0.5 animate-fade-in-up',
-        gradient,
+        'relative overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in-up',
+        bgColor,
       )}
-      style={{ animationDelay: `${delay}ms` }}
+      style={{ animationDelay: `${delay}ms`, borderRadius: '0.75rem' }}
     >
-      <CardContent className="p-5">
+      <CardContent className="p-4 md:p-5">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-white/80">{title}</p>
+            <p className="text-sm font-medium text-white/90">{title}</p>
             <p className="text-3xl font-bold text-white tabular-nums">{loading ? '—' : value}</p>
           </div>
-          <div className={cn('rounded-xl p-2.5 bg-white/20 backdrop-blur-sm', iconBg)}>
+          <div className="rounded-full bg-white/20 p-2.5 backdrop-blur-sm flex items-center justify-center">
             <Icon className="h-5 w-5 text-white" />
           </div>
         </div>
@@ -145,8 +143,7 @@ export default function Index() {
           value={stats.patients}
           icon={Users}
           loading={loading}
-          gradient="bg-gradient-to-br from-[hsl(160_55%_42%)] to-[hsl(160_55%_32%)]"
-          iconBg=""
+          bgColor="bg-[#3b936b]"
           delay={0}
         />
         <StatCard
@@ -154,8 +151,7 @@ export default function Index() {
           value={stats.doctors}
           icon={UserRound}
           loading={loading}
-          gradient="bg-gradient-to-br from-[hsl(200_65%_52%)] to-[hsl(200_60%_40%)]"
-          iconBg=""
+          bgColor="bg-[#348cbf]"
           delay={75}
         />
         <StatCard
@@ -163,8 +159,7 @@ export default function Index() {
           value={stats.templates}
           icon={FileText}
           loading={loading}
-          gradient="bg-gradient-to-br from-[hsl(280_40%_55%)] to-[hsl(280_40%_42%)]"
-          iconBg=""
+          bgColor="bg-[#9d559e]"
           delay={150}
         />
         <StatCard
@@ -172,20 +167,19 @@ export default function Index() {
           value={appointmentsCount ?? 0}
           icon={Calendar}
           loading={appointmentsCount === null}
-          gradient="bg-gradient-to-br from-[hsl(38_90%_55%)] to-[hsl(38_85%_45%)]"
-          iconBg=""
+          bgColor="bg-[#db9d25]"
           delay={225}
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card
-          className="lg:col-span-2 shadow-card border-none animate-fade-in-up"
+          className="lg:col-span-2 shadow-sm border-none bg-white rounded-2xl animate-fade-in-up"
           style={{ animationDelay: '300ms' }}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="rounded-lg bg-brand-green-light p-2">
+              <div className="rounded-full bg-brand-green-light/50 p-2">
                 <Clock className="h-4 w-4 text-brand-green" />
               </div>
               <CardTitle className="text-base font-semibold text-brand-forest">
@@ -248,12 +242,12 @@ export default function Index() {
         </Card>
 
         <Card
-          className="shadow-card border-none animate-fade-in-up"
+          className="shadow-sm border-none bg-white rounded-2xl animate-fade-in-up"
           style={{ animationDelay: '375ms' }}
         >
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="rounded-lg bg-sky-100 p-2">
+              <div className="rounded-full bg-sky-50 p-2">
                 <Activity className="h-4 w-4 text-sky-600" />
               </div>
               <CardTitle className="text-base font-semibold text-brand-forest">
@@ -261,38 +255,38 @@ export default function Index() {
               </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-brand-green-light to-transparent p-3">
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-4 rounded-xl bg-[#f8fbf9] p-3 border border-black/5">
               <div className="rounded-lg bg-white p-2 shadow-sm">
-                <TrendingUp className="h-4 w-4 text-brand-green" />
+                <TrendingUp className="h-5 w-5 text-[#3b936b]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-brand-forest tabular-nums">
+                <p className="text-lg font-bold text-foreground tabular-nums leading-none">
                   {loading ? '—' : stats.patients}
                 </p>
-                <p className="text-xs text-muted-foreground">Pacientes cadastrados</p>
+                <p className="text-xs text-muted-foreground mt-1">Pacientes cadastrados</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-sky-50 to-transparent p-3">
+            <div className="flex items-center gap-4 rounded-xl bg-[#f6f9fc] p-3 border border-black/5">
               <div className="rounded-lg bg-white p-2 shadow-sm">
-                <UserRound className="h-4 w-4 text-sky-600" />
+                <UserRound className="h-5 w-5 text-[#348cbf]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-sky-700 tabular-nums">
+                <p className="text-lg font-bold text-foreground tabular-nums leading-none">
                   {loading ? '—' : stats.doctors}
                 </p>
-                <p className="text-xs text-muted-foreground">Profissionais ativos</p>
+                <p className="text-xs text-muted-foreground mt-1">Profissionais ativos</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-violet-50 to-transparent p-3">
+            <div className="flex items-center gap-4 rounded-xl bg-[#fbf6fc] p-3 border border-black/5">
               <div className="rounded-lg bg-white p-2 shadow-sm">
-                <FileText className="h-4 w-4 text-violet-600" />
+                <FileText className="h-5 w-5 text-[#9d559e]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-violet-700 tabular-nums">
+                <p className="text-lg font-bold text-foreground tabular-nums leading-none">
                   {loading ? '—' : stats.templates}
                 </p>
-                <p className="text-xs text-muted-foreground">Modelos disponíveis</p>
+                <p className="text-xs text-muted-foreground mt-1">Modelos disponíveis</p>
               </div>
             </div>
           </CardContent>
