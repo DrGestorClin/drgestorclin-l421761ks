@@ -22,10 +22,7 @@ migrate(
 
     usersCol = app.findCollectionByNameOrId('_pb_users_auth_')
 
-    var oldRoleField = usersCol.fields.getByName('role')
-    if (oldRoleField) {
-      usersCol.fields.remove(oldRoleField)
-    }
+    usersCol.fields.removeByName('role')
     usersCol.fields.add(
       new SelectField({
         name: 'role',

@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-07-12T04:19:35.079Z",
+  "generatedAt": "2026-07-12T04:26:40.695Z",
   "collections": [
     {
       "name": "users",
       "type": "auth",
       "apiRules": {
-        "list": "@request.auth.role = \"admin\" || id = @request.auth.id",
-        "view": "@request.auth.role = \"admin\" || id = @request.auth.id",
+        "list": "@request.auth.role = \"ADM\" || id = @request.auth.id",
+        "view": "@request.auth.role = \"ADM\" || id = @request.auth.id",
         "create": "",
-        "update": "@request.auth.role = \"admin\" || id = @request.auth.id",
-        "delete": "@request.auth.role = \"admin\" || id = @request.auth.id"
+        "update": "@request.auth.role = \"ADM\" || id = @request.auth.id",
+        "delete": "@request.auth.role = \"ADM\" || id = @request.auth.id"
       },
       "fields": [
         {
@@ -39,13 +39,6 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
-          "name": "role",
-          "type": "select",
-          "required": false,
-          "system": false,
-          "selectValues": ["admin", "doctor", "staff"]
-        },
-        {
           "name": "doctor_ref",
           "type": "relation",
           "required": false,
@@ -64,6 +57,13 @@
           "required": false,
           "system": false,
           "collectionRef": "establishments"
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["ADM", "Medico", "Assistente"]
         }
       ],
       "indexes": [
@@ -77,9 +77,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.role = \"admin\"",
-        "update": "@request.auth.role = \"admin\"",
-        "delete": "@request.auth.role = \"admin\""
+        "create": "@request.auth.role = \"ADM\"",
+        "update": "@request.auth.role = \"ADM\"",
+        "delete": "@request.auth.role = \"ADM\""
       },
       "fields": [
         {
@@ -155,8 +155,8 @@
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
         "create": "@request.auth.id != ''",
-        "update": "@request.auth.role = \"admin\" || doctor = @request.auth.doctor_ref",
-        "delete": "@request.auth.role = \"admin\""
+        "update": "@request.auth.role = \"ADM\" || doctor = @request.auth.doctor_ref",
+        "delete": "@request.auth.role = \"ADM\""
       },
       "fields": [
         {
@@ -331,7 +331,7 @@
         "view": "@request.auth.id != ''",
         "create": "@request.auth.id != ''",
         "update": "@request.auth.id != ''",
-        "delete": "@request.auth.role = \"admin\""
+        "delete": "@request.auth.role = \"ADM\""
       },
       "fields": [
         {
@@ -407,11 +407,11 @@
       "name": "audit_logs",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = \"admin\"",
-        "view": "@request.auth.role = \"admin\"",
+        "list": "@request.auth.role = \"ADM\"",
+        "view": "@request.auth.role = \"ADM\"",
         "create": "@request.auth.id != \"\"",
-        "update": "@request.auth.role = \"admin\"",
-        "delete": "@request.auth.role = \"admin\""
+        "update": "@request.auth.role = \"ADM\"",
+        "delete": "@request.auth.role = \"ADM\""
       },
       "fields": [
         {
@@ -472,9 +472,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.role = \"admin\"",
-        "update": "@request.auth.role = \"admin\"",
-        "delete": "@request.auth.role = \"admin\""
+        "create": "@request.auth.role = \"ADM\"",
+        "update": "@request.auth.role = \"ADM\"",
+        "delete": "@request.auth.role = \"ADM\""
       },
       "fields": [
         {
