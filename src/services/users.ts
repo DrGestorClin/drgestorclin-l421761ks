@@ -1,4 +1,6 @@
 import pb from '@/lib/pocketbase/client'
+import type { Establishment } from '@/services/establishments'
+import type { Doctor } from '@/services/doctors'
 
 export interface ClinicUser {
   id: string
@@ -11,10 +13,17 @@ export interface ClinicUser {
   force_password_change?: boolean
   created: string
   updated: string
+  expand?: {
+    establishment_ref?: Establishment
+    doctor_ref?: Doctor
+  }
 }
 
 export const getUsers = async (): Promise<ClinicUser[]> =>
-  pb.collection('users').getFullList({ sort: '-created' })
+  pb.collection('users').getFullList({
+    sort: '-created',
+    expand: 'establishment_ref,doctor_ref',
+  })
 
 export const updateUserRole = async (id: string, role: string): Promise<ClinicUser> =>
   pb.collection('users').update(id, { role })

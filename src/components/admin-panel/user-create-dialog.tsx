@@ -16,10 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ShieldAlert, Loader2, CheckCircle } from 'lucide-react'
+import { ShieldAlert, Loader2, CheckCircle, Building2, Plus } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { createUser } from '@/services/users'
-import { findOrCreateEstablishment } from '@/services/establishments'
+import {
+  getEstablishments,
+  findOrCreateEstablishment,
+  type Establishment,
+} from '@/services/establishments'
 import { getDoctors, type Doctor } from '@/services/doctors'
 import { validatePassword, passwordRules } from '@/lib/password-validation'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
@@ -28,7 +32,9 @@ import pb from '@/lib/pocketbase/client'
 type UserType = 'admin' | 'doctor' | 'staff' | 'patient'
 
 const LGPD_TEXT =
-  'O tratamento de dados e o sigilo jurídico das informações são de responsabilidade dos médicos e profissionais de saúde, em estrita conformidade com a LGPD (Lei Geral de Proteção de Dados).'
+  'Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a responsabilidade jurídica sobre as informações inseridas são de total responsabilidade do profissional de saúde.'
+
+const CREATE_NEW = '__create_new__'
 
 export function UserCreateDialog({
   open,
@@ -46,18 +52,28 @@ export function UserCreateDialog({
   const [specialty, setSpecialty] = useState('')
   const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('')
-  const [estType, setEstType] = useState<'Clínica' | 'Consultório'>('Clínica')
-  const [estName, setEstName] = useState('')
+  const [estFilter, setEstFilter] = useState<'all' | 'Clínica' | 'Consultório'>('all')
+  const [estMode, setEstMode] = useState<'existing' | 'new'>('existing')
+  const [selectedEstId, setSelectedEstId] = useState('')
+  const [newEstType, setNewEstType] = useState<'Clínica' | 'Consultório'>('Clínica')
+  const [newEstName, setNewEstName] = useState('')
   const [selectedDoctor, setSelectedDoctor] = useState('')
   const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [establishments, setEstablishments] = useState<Establishment[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (open)
+    if (open) {
       getDoctors()
         .then(setDoctors)
         .catch(() => {})
+      getEstablishments()
+        .then(setEstablishments)
+        .catch(() => {})
+    }
   }, [open])
+
+  const filteredEst = establishments.filter((e) => estFilter === 'all' || e.type === estFilter)
 
   const resetForm = () => {
     setUserType('staff')
@@ -68,8 +84,11 @@ export function UserCreateDialog({
     setSpecialty('')
     setPhone('')
     setBirthDate('')
-    setEstType('Clínica')
-    setEstName('')
+    setEstFilter('all')
+    setEstMode('existing')
+    setSelectedEstId('')
+    setNewEstType('Clínica')
+    setNewEstName('')
     setSelectedDoctor('')
   }
 
@@ -77,12 +96,18 @@ export function UserCreateDialog({
   const needsEstablishment = userType !== 'admin'
   const needsPassword = !isPatient
   const passwordValid = validatePassword(password)
+
+  const establishmentValid =
+    !needsEstablishment ||
+    (estMode === 'existing' && !!selectedEstId) ||
+    (estMode === 'new' && !!newEstName.trim())
+
   const canSubmit = Boolean(
     name.trim() &&
     email.trim() &&
     (isPatient || passwordValid) &&
     (userType !== 'doctor' || (crm.trim() && specialty.trim())) &&
-    (!needsEstablishment || estName.trim()) &&
+    establishmentValid &&
     (!isPatient || selectedDoctor),
   )
 
@@ -91,9 +116,13 @@ export function UserCreateDialog({
     setLoading(true)
     try {
       let estId: string | undefined
-      if (needsEstablishment && estName.trim()) {
-        const est = await findOrCreateEstablishment(estName.trim(), estType)
-        estId = est.id
+      if (needsEstablishment) {
+        if (estMode === 'existing' && selectedEstId) {
+          estId = selectedEstId
+        } else if (estMode === 'new' && newEstName.trim()) {
+          const est = await findOrCreateEstablishment(newEstName.trim(), newEstType)
+          estId = est.id
+        }
       }
 
       if (isPatient) {
@@ -206,21 +235,23 @@ export function UserCreateDialog({
                 placeholder="••••••••"
               />
               <div className="space-y-1 rounded-lg bg-muted/50 p-2">
-                {passwordRules.map((rule, i) => {
-                  const passed = rule.test(password)
-                  return (
-                    <div key={i} className="flex items-center gap-1.5 text-xs">
-                      {passed ? (
-                        <CheckCircle className="h-3 w-3 text-green-600" />
-                      ) : (
-                        <div className="h-3 w-3 rounded-full border border-muted-foreground/30" />
-                      )}
-                      <span className={passed ? 'text-green-700' : 'text-muted-foreground'}>
-                        {rule.label}
-                      </span>
-                    </div>
-                  )
-                })}
+                {passwordRules.map(
+                  (rule: { label: string; test: (v: string) => boolean }, i: number) => {
+                    const passed = rule.test(password)
+                    return (
+                      <div key={i} className="flex items-center gap-1.5 text-xs">
+                        {passed ? (
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <div className="h-3 w-3 rounded-full border border-muted-foreground/30" />
+                        )}
+                        <span className={passed ? 'text-green-700' : 'text-muted-foreground'}>
+                          {rule.label}
+                        </span>
+                      </div>
+                    )
+                  },
+                )}
               </div>
             </div>
           )}
@@ -286,31 +317,104 @@ export function UserCreateDialog({
           )}
 
           {needsEstablishment && (
-            <>
-              <div className="space-y-1.5">
-                <Label>Tipo de Estabelecimento</Label>
-                <Select
-                  value={estType}
-                  onValueChange={(v) => setEstType(v as 'Clínica' | 'Consultório')}
+            <div className="space-y-3 rounded-lg border border-border/60 p-3 bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-[#3B9169]" />
+                <Label className="text-sm font-semibold">Estabelecimento *</Label>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={estMode === 'existing' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setEstMode('existing')}
+                  className={estMode === 'existing' ? 'bg-[#3B9169] hover:bg-[#28533D]' : ''}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Clínica">Clínica</SelectItem>
-                    <SelectItem value="Consultório">Consultório</SelectItem>
-                  </SelectContent>
-                </Select>
+                  Selecionar Existente
+                </Button>
+                <Button
+                  type="button"
+                  variant={estMode === 'new' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setEstMode('new')}
+                  className={estMode === 'new' ? 'bg-[#3B9169] hover:bg-[#28533D]' : ''}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Criar Novo
+                </Button>
               </div>
-              <div className="space-y-1.5">
-                <Label>Nome do Estabelecimento</Label>
-                <Input
-                  value={estName}
-                  onChange={(e) => setEstName(e.target.value)}
-                  placeholder="Ex: Clínica Vida Saudável"
-                />
-              </div>
-            </>
+
+              {estMode === 'existing' ? (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Filtrar por tipo</Label>
+                    <Select
+                      value={estFilter}
+                      onValueChange={(v) => {
+                        setEstFilter(v as 'all' | 'Clínica' | 'Consultório')
+                        setSelectedEstId('')
+                      }}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="Clínica">Clínica</SelectItem>
+                        <SelectItem value="Consultório">Consultório</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Estabelecimento</Label>
+                    <Select value={selectedEstId} onValueChange={setSelectedEstId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um estabelecimento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredEst.map((est) => (
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name} ({est.type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {filteredEst.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhum estabelecimento encontrado. Crie um novo.
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tipo de Estabelecimento</Label>
+                    <Select
+                      value={newEstType}
+                      onValueChange={(v) => setNewEstType(v as 'Clínica' | 'Consultório')}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Clínica">Clínica</SelectItem>
+                        <SelectItem value="Consultório">Consultório</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Nome do Estabelecimento</Label>
+                    <Input
+                      value={newEstName}
+                      onChange={(e) => setNewEstName(e.target.value)}
+                      placeholder="Ex: Clínica Vida Saudável"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
 

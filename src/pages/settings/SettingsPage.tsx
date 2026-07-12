@@ -66,9 +66,9 @@ export default function SettingsPage() {
       <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
         <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <p className="text-sm text-amber-800">
-          O tratamento de dados e o sigilo jurídico das informações são de responsabilidade dos
-          médicos e profissionais de saúde, em estrita conformidade com a LGPD (Lei Geral de
-          Proteção de Dados).
+          Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a responsabilidade
+          jurídica sobre as informações inseridas são de total responsabilidade do profissional de
+          saúde.
         </p>
       </div>
 

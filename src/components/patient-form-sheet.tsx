@@ -17,8 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, ImageIcon } from 'lucide-react'
+import { Loader2, ImageIcon, ShieldAlert } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+
+const LGPD_TEXT =
+  'Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a responsabilidade jurídica sobre as informações inseridas são de total responsabilidade do profissional de saúde.'
 import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 import {
   createPatient,
@@ -166,6 +169,10 @@ export function PatientFormSheet({
             Preencha as informações do paciente. Os dados são preservados ao trocar de aba.
           </SheetDescription>
         </SheetHeader>
+        <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 mb-4">
+          <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-800">{LGPD_TEXT}</p>
+        </div>
         <Tabs defaultValue="pessoal" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="pessoal">Informações Pessoais</TabsTrigger>
