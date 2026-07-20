@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T22:36:36.378Z",
+  "generatedAt": "2026-07-19T18:41:15.661Z",
   "collections": [
     {
       "name": "users",
@@ -29,19 +29,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "doctor_ref",
@@ -68,12 +63,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "ADM",
-            "Clinica",
-            "Assistente",
-            "Medico"
-          ]
+          "selectValues": ["ADM", "Clinica", "Assistente", "Medico"]
         }
       ],
       "indexes": [
@@ -133,19 +123,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "email_status",
@@ -161,9 +146,7 @@
           "collectionRef": "establishments"
         }
       ],
-      "indexes": [
-        "CREATE UNIQUE INDEX idx_doctors_crm ON doctors (crm)"
-      ]
+      "indexes": ["CREATE UNIQUE INDEX idx_doctors_crm ON doctors (crm)"]
     },
     {
       "name": "patients",
@@ -212,19 +195,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "photo",
@@ -246,9 +224,7 @@
           "collectionRef": "establishments"
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_patients_doctor ON patients (doctor)"
-      ]
+      "indexes": ["CREATE INDEX idx_patients_doctor ON patients (doctor)"]
     },
     {
       "name": "medical_record_templates",
@@ -278,19 +254,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": []
@@ -337,19 +308,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -414,30 +380,21 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "Consulta",
-            "Retorno",
-            "Procedimento"
-          ]
+          "selectValues": ["Consulta", "Retorno", "Procedimento"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -493,19 +450,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -536,34 +488,24 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "Clínica",
-            "Consultório"
-          ]
+          "selectValues": ["Clínica", "Consultório"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_establishments_name_type ON establishments (name, type)"
-      ]
+      "indexes": ["CREATE INDEX idx_establishments_name_type ON establishments (name, type)"]
     }
   ]
 }

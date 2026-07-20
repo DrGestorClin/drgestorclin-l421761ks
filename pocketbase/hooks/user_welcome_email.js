@@ -13,6 +13,11 @@ onRecordAfterCreateSuccess((e) => {
     return e.next()
   }
 
+  var forcePasswordChange = user.getBool('force_password_change')
+  if (forcePasswordChange) {
+    return e.next()
+  }
+
   var smtpHost = $secrets.get('GMAIL_SMTP_HOST')
   var smtpPort = $secrets.get('GMAIL_SMTP_PORT')
   var smtpUser = $secrets.get('GMAIL_SMTP_USERNAME')

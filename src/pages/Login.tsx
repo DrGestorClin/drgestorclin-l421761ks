@@ -222,9 +222,8 @@ export default function LoginPage() {
                         Senha provisória enviada!
                       </p>
                       <p className="text-sm text-green-700 mt-1">
-                        Se o e-mail estiver cadastrado e for de um administrador ou médico, você
-                        receberá uma senha provisória. Por favor, verifique sua caixa de entrada e
-                        altere a senha após o login.
+                        Se uma conta existir com este e-mail, você receberá uma senha provisória.
+                        Por favor, verifique sua caixa de entrada e altere a senha após o login.
                       </p>
                     </div>
                   </div>

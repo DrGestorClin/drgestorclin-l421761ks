@@ -3,41 +3,17 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
   var email = (body.email || '').trim()
   if (!email) return e.badRequestError('email is required')
 
-  var userRecord = null
-  try {
-    userRecord = $app.findAuthRecordByEmail('_pb_users_auth_', email)
-  } catch (_) {}
-
-  var genericMessage =
-    'Se o e-mail estiver cadastrado e for de um administrador ou médico, você receberá uma senha provisória.'
-
-  if (!userRecord) {
-    return e.json(200, { success: true, message: genericMessage })
-  }
-
-  var role = ''
-  try {
-    role = userRecord.get('role') || ''
-  } catch (_) {}
-
-  if (role !== 'ADM' && role !== 'Medico') {
-    return e.json(200, { success: true, message: genericMessage })
-  }
-
-  var provisionalPassword = $security.randomString(16)
-  try {
-    userRecord.setPassword(provisionalPassword)
-    userRecord.set('force_password_change', true)
-    $app.save(userRecord)
-
+  function logAudit(userId, details) {
     try {
       var auditCol = $app.findCollectionByNameOrId('audit_logs')
       var auditRecord = new Record(auditCol)
-      auditRecord.set('user', userRecord.id)
-      auditRecord.set('action', 'PASSWORD_RESET')
+      if (userId) {
+        auditRecord.set('user', userId)
+      }
+      auditRecord.set('action', 'password_reset_request')
       auditRecord.set('resource', 'users')
-      auditRecord.set('resource_id', userRecord.id)
-      auditRecord.set('details', 'Senha provisória enviada por e-mail')
+      auditRecord.set('resource_id', userId || email)
+      auditRecord.set('details', details)
       $app.save(auditRecord)
     } catch (auditErr) {
       $app
@@ -48,10 +24,28 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
           (auditErr && auditErr.message) || '',
         )
     }
+  }
+
+  var genericMessage = 'Se uma conta existir com este e-mail, você receberá uma senha provisória.'
+
+  var userRecord = null
+  try {
+    userRecord = $app.findAuthRecordByEmail('_pb_users_auth_', email)
+  } catch (_) {}
+
+  if (!userRecord) {
+    logAudit('', 'Tentativa de recuperação para e-mail não cadastrado: ' + email)
+    return e.json(200, { success: true, message: genericMessage })
+  }
+
+  var provisionalPassword = $security.randomString(16)
+
+  try {
+    userRecord.setPassword(provisionionalPassword)
+    userRecord.set('force_password_change', true)
+    $app.save(userRecord)
   } catch (err) {
-    $app
-      .logger()
-      .error('Failed to reset password', 'error', (err && err.message) || '', 'email', email)
+    logAudit(userRecord.id, 'Falha ao redefinir senha: ' + ((err && err.message) || ''))
     return e.json(500, {
       success: false,
       message: 'Erro ao redefinir a senha. Tente novamente.',
@@ -63,38 +57,49 @@ routerAdd('POST', '/backend/v1/forgot-password', (e) => {
   var smtpUser = $secrets.get('GMAIL_SMTP_USERNAME')
   var smtpPass = $secrets.get('GMAIL_SMTP_PASSWORD')
 
-  if (smtpHost && smtpPort && smtpUser && smtpPass) {
-    try {
-      var settings = $app.settings()
-      settings.SMTP.Host = smtpHost
-      settings.SMTP.Port = parseInt(smtpPort)
-      settings.SMTP.Username = smtpUser
-      settings.SMTP.Password = smtpPass
-      settings.SMTP.Enabled = true
-      settings.SMTP.TLS = parseInt(smtpPort) === 465
-      $app.save(settings)
-
-      $app.newMailClient().send({
-        from: { address: smtpUser, name: 'DrGestorClin' },
-        to: [{ address: email }],
-        subject: 'DrGestorClin - Senha Provisória',
-        text:
-          'Sua senha provisória é: ' + provisionalPassword + '. Por favor, altere-a após o login.',
-        html:
-          '<p>Sua senha provisória é: <strong>' +
-          provisionalPassword +
-          '</strong>. Por favor, altere-a após o login.</p>',
-      })
-
-      $app.logger().info('Provisional password email sent', 'email', email)
-    } catch (err) {
-      $app
-        .logger()
-        .error('Failed to send provisional password email', 'error', err.message, 'email', email)
-    }
-  } else {
-    $app.logger().error('SMTP_CONFIG_MISSING', 'hook', 'forgot_password', 'email', email)
+  if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
+    logAudit(userRecord.id, 'Falha ao enviar e-mail: SMTP não configurado')
+    return e.json(500, {
+      success: false,
+      message: 'Serviço de e-mail não configurado. Contate o administrador do sistema.',
+    })
   }
+
+  try {
+    var settings = $app.settings()
+    settings.SMTP.Host = smtpHost
+    settings.SMTP.Port = parseInt(smtpPort)
+    settings.SMTP.Username = smtpUser
+    settings.SMTP.Password = smtpPass
+    settings.SMTP.Enabled = true
+    settings.SMTP.TLS = parseInt(smtpPort) === 465
+    $app.save(settings)
+
+    $app.newMailClient().send({
+      from: { address: smtpUser, name: 'DrGestorClin' },
+      to: [{ address: email }],
+      subject: 'DrGestorClin - Senha Provisória',
+      text:
+        'Sua senha provisória é: ' + provisionalPassword + '. Por favor, altere-a após o login.',
+      html:
+        '<p>Sua senha provisória é: <strong>' +
+        provisionalPassword +
+        '</strong>. Por favor, altere-a após o login.</p>',
+    })
+
+    $app.logger().info('Provisional password email sent', 'email', email)
+  } catch (err) {
+    logAudit(
+      userRecord.id,
+      'Falha ao enviar e-mail de recuperação: ' + ((err && err.message) || ''),
+    )
+    return e.json(500, {
+      success: false,
+      message: 'Falha ao enviar o e-mail de recuperação. Tente novamente ou contate o suporte.',
+    })
+  }
+
+  logAudit(userRecord.id, 'Senha provisória enviada por e-mail')
 
   return e.json(200, { success: true, message: genericMessage })
 })
