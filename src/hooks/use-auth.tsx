@@ -100,6 +100,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         passwordConfirm: password,
         role: 'Assistente',
+        name: email.split('@')[0],
+        force_password_change: false,
       })
       await pb.collection('users').authWithPassword(email, password)
       return { error: null }

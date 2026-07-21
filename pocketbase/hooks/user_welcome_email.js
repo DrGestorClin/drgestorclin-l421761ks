@@ -5,7 +5,14 @@ onRecordAfterCreateSuccess((e) => {
   var userId = user.id
   var doctorRef = user.getString('doctor_ref')
 
+  // Não enviar welcome email para médicos (já têm o hook doctor_onboarding)
   if (doctorRef) {
+    return e.next()
+  }
+
+  // Não enviar para admins
+  var role = user.getString('role')
+  if (role === 'ADM') {
     return e.next()
   }
 
@@ -13,11 +20,14 @@ onRecordAfterCreateSuccess((e) => {
     return e.next()
   }
 
+  // Se force_password_change já é true, o admin já definiu uma senha
+  // e o usuário vai trocar no primeiro login. Não sobrescrever.
   var forcePasswordChange = user.getBool('force_password_change')
   if (forcePasswordChange) {
     return e.next()
   }
 
+  // ── Verificar SMTP ──
   var smtpHost = $secrets.get('GMAIL_SMTP_HOST')
   var smtpPort = $secrets.get('GMAIL_SMTP_PORT')
   var smtpUser = $secrets.get('GMAIL_SMTP_USERNAME')
@@ -28,26 +38,7 @@ onRecordAfterCreateSuccess((e) => {
     return e.next()
   }
 
-  var tempPassword = $security.randomString(16)
-
-  try {
-    var rec = $app.findRecordById('users', userId)
-    rec.setPassword(tempPassword)
-    rec.set('force_password_change', true)
-    $app.save(rec)
-  } catch (err) {
-    $app
-      .logger()
-      .error(
-        'Failed to set provisional password for new user',
-        'error',
-        (err && err.message) || '',
-        'user_id',
-        userId,
-      )
-    return e.next()
-  }
-
+  // ── Configurar SMTP ──
   try {
     var settings = $app.settings()
     settings.SMTP.Host = smtpHost
@@ -62,6 +53,9 @@ onRecordAfterCreateSuccess((e) => {
     return e.next()
   }
 
+  // ── Enviar email de boas-vindas (sem gerar nova senha) ──
+  // A senha foi definida pelo admin ou pelo próprio usuário no signup.
+  // Aqui apenas enviamos um email informativo de boas-vindas.
   var siteUrl = $secrets.get('SITE_URL') || 'https://drgestorclin-52167.goskip.app'
 
   try {
@@ -70,24 +64,20 @@ onRecordAfterCreateSuccess((e) => {
       name +
       ',\n\nSua conta foi criada no DrGestorClin!\n\nDetalhes de acesso:\nE-mail: ' +
       email +
-      '\nSenha temporária: ' +
-      tempPassword +
       '\nURL de acesso: ' +
       siteUrl +
-      '\n\nPor segurança, você deve alterar sua senha após o primeiro login.\n\nAtenciosamente,\nEquipe DrGestorClin'
+      '\n\nUse a senha que foi definida no seu cadastro. Se foi criado por um administrador, você será solicitado a alterar sua senha no primeiro login.\n\nAtenciosamente,\nEquipe DrGestorClin'
 
     var emailHtml =
       '<p>Olá ' +
       name +
       ',</p><p>Sua conta foi criada no <strong>DrGestorClin</strong>!</p><p><strong>Detalhes de acesso:</strong><br/>E-mail: ' +
       email +
-      '<br/>Senha temporária: <strong>' +
-      tempPassword +
-      '</strong><br/>URL de acesso: <a href="' +
+      '<br/>URL de acesso: <a href="' +
       siteUrl +
       '">' +
       siteUrl +
-      '</a></p><p>Por segurança, você deve alterar sua senha após o primeiro login.</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
+      '</a></p><p>Use a senha que foi definida no seu cadastro. Se foi criado por um administrador, você será solicitado a alterar sua senha no primeiro login.</p><p>Atenciosamente,<br/>Equipe DrGestorClin</p>'
 
     $app.newMailClient().send({
       from: { address: smtpUser, name: 'DrGestorClin' },

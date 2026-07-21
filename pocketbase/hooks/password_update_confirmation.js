@@ -1,6 +1,6 @@
 onRecordAfterUpdateSuccess((e) => {
-  var originalForceChange = e.record.original().getBool('force_password_change')
-  var currentForceChange = e.record.getBool('force_password_change')
+  var originalForceChange = e.record.original().get('force_password_change')
+  var currentForceChange = e.record.get('force_password_change')
 
   if (!originalForceChange || currentForceChange) {
     return e.next()

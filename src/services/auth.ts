@@ -2,6 +2,7 @@ import pb from '@/lib/pocketbase/client'
 
 export interface ForgotPasswordResult {
   success: boolean
+  error?: string
   message: string
 }
 
@@ -17,6 +18,7 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordResul
     const responseData = err?.response
     return {
       success: false,
+      error: responseData?.error || 'NETWORK_ERROR',
       message: responseData?.message || 'Erro de conexão ao tentar redefinir a senha.',
     }
   }
