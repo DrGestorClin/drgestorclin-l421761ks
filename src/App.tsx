@@ -16,6 +16,7 @@ import LoginPage from './pages/Login'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import UpdatePasswordPage from './pages/UpdatePassword'
+import ResetPasswordPage from './pages/ResetPassword'
 
 const App = () => (
   <BrowserRouter>
@@ -25,6 +26,7 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/update-password" element={<UpdatePasswordPage />} />
             <Route element={<ProtectedRoute forcePasswordChangeGuard />}>

@@ -8,18 +8,18 @@ export interface ForgotPasswordResult {
 
 export const forgotPassword = async (email: string): Promise<ForgotPasswordResult> => {
   try {
-    const result = await pb.send('/backend/v1/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return result as ForgotPasswordResult
+    await pb.collection('users').requestPasswordReset(email)
+    return {
+      success: true,
+      message: 'Se o e-mail estiver cadastrado, você receberá o link de redefinição.',
+    }
   } catch (err: any) {
-    const responseData = err?.response
+    // requestPasswordReset não retorna erro se o email não existe (segurança)
+    // mas pode falhar por outros motivos (rede, etc)
     return {
       success: false,
-      error: responseData?.error || 'NETWORK_ERROR',
-      message: responseData?.message || 'Erro de conexão ao tentar redefinir a senha.',
+      error: err?.code || 'NETWORK_ERROR',
+      message: 'Erro de conexão ao tentar redefinir a senha. Tente novamente.',
     }
   }
 }
