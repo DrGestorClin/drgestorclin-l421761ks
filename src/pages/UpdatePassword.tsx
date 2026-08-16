@@ -52,11 +52,17 @@ export default function UpdatePasswordPage() {
         passwordConfirm: confirmPassword.trim(),
         force_password_change: false,
       })
-      pb.authStore.clear()
-      toast.success('Sua senha foi alterada com sucesso!')
-      setTimeout(() => {
-        navigate('/login', { replace: true })
-      }, 2000)
+      try {
+        await pb.collection('users').authRefresh()
+        toast.success('Sua senha foi alterada com sucesso!')
+        navigate('/', { replace: true })
+      } catch {
+        pb.authStore.clear()
+        toast.success('Sua senha foi alterada com sucesso!')
+        setTimeout(() => {
+          navigate('/login', { replace: true })
+        }, 2000)
+      }
     } catch (err) {
       const fieldErrs = extractFieldErrors(err)
       if (Object.keys(fieldErrs).length > 0) {
@@ -71,7 +77,7 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(var(--brand-green-light))] to-slate-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(var(--brand-green-light))] to-slate-100 p-4 pt-[0px]">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">

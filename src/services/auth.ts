@@ -14,12 +14,21 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordResul
       message: 'Se o e-mail estiver cadastrado, você receberá o link de redefinição.',
     }
   } catch (err: any) {
-    // requestPasswordReset não retorna erro se o email não existe (segurança)
-    // mas pode falhar por outros motivos (rede, etc)
+    const status = err?.status || 0
+    let message = 'Não foi possível enviar o e-mail de recuperação. Tente novamente.'
+    if (status === 0) {
+      message = 'Sem conexão com o servidor. Verifique sua internet e tente novamente.'
+    } else if (status === 429) {
+      message = 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
+    } else if (status >= 500) {
+      message = 'O servidor está indisponível no momento. Tente novamente em instantes.'
+    } else if (status === 400) {
+      message = 'O e-mail informado é inválido. Verifique o endereço e tente novamente.'
+    }
     return {
       success: false,
-      error: err?.code || 'NETWORK_ERROR',
-      message: 'Erro de conexão ao tentar redefinir a senha. Tente novamente.',
+      error: err?.code || 'ERROR',
+      message,
     }
   }
 }
