@@ -47,22 +47,40 @@ export default function UpdatePasswordPage() {
     setFieldErrors({})
 
     try {
+      // Atualiza a senha e limpa o flag force_password_change.
+      // O hook backend `clear_force_password_change.js` também força o
+      // flag para false quando a senha muda, mas enviamos false aqui para
+      // garantir mesmo se houver alguma falha no hook.
       await pb.collection('users').update(user.id, {
         password: newPassword.trim(),
         passwordConfirm: confirmPassword.trim(),
         force_password_change: false,
       })
+
+      // Tenta atualizar a sessão local (authRefresh) para que o registro
+      // em memória reflita force_password_change=false. Se falhar,
+      // ainda assim redirecionamos para o dashboard, forçando um novo
+      // login silencioso com a senha recém-definida quando possível.
       try {
         await pb.collection('users').authRefresh()
-        toast.success('Sua senha foi alterada com sucesso!')
-        navigate('/', { replace: true })
       } catch {
-        pb.authStore.clear()
-        toast.success('Sua senha foi alterada com sucesso!')
-        setTimeout(() => {
-          navigate('/login', { replace: true })
-        }, 2000)
+        // authRefresh pode falhar (ex.: token expirado). Tenta reautenticar
+        // silenciosamente com a nova senha para manter a sessão ativa e o
+        // flag atualizado em memória.
+        try {
+          const email = user.email
+          await pb.collection('users').authWithPassword(email, newPassword.trim())
+        } catch {
+          // Não consegue manter a sessão — limpa o store. Mesmo assim o
+          // usuário é redirecionado para o dashboard; o ProtectedRoute
+          // cuidará de mandar para /login se não houver sessão.
+          pb.authStore.clear()
+        }
       }
+
+      toast.success('Sua senha foi alterada com sucesso!')
+      // Sempre redireciona para o dashboard, nunca para o login.
+      navigate('/', { replace: true })
     } catch (err) {
       const fieldErrs = extractFieldErrors(err)
       if (Object.keys(fieldErrs).length > 0) {

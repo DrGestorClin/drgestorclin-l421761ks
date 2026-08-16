@@ -1,14 +1,21 @@
+// Limpa o flag `force_password_change` sempre que a senha de um usuário
+// auth é efetivamente alterada, seja pelo fluxo "esqueci minha senha"
+// (confirmPasswordReset), pelo endpoint de update do próprio usuário
+// (UpdatePassword.tsx) ou por um admin redefinindo a senha.
+//
+// Antes este hook só limpava o flag em condições muito restritas
+// (original=true E current=true), o que fazia o usuário ficar preso no
+// loop /update-password. Agora, sempre que a senha muda, garantimos
+// force_password_change=false.
 onRecordUpdate((e) => {
   var oldPass = e.record.original().getString('password')
   var newPass = e.record.getString('password')
 
-  if (oldPass && newPass && oldPass !== newPass) {
-    var originalForceChange = e.record.original().getBool('force_password_change')
-    var currentForceChange = e.record.getBool('force_password_change')
+  // A senha foi alterada de fato?
+  var passwordChanged = !!newPass && (!oldPass || oldPass !== newPass)
 
-    if (originalForceChange && currentForceChange) {
-      e.record.set('force_password_change', false)
-    }
+  if (passwordChanged) {
+    e.record.set('force_password_change', false)
   }
 
   e.next()

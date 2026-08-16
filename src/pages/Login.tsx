@@ -32,6 +32,9 @@ export default function LoginPage() {
   const [forgotError, setForgotError] = useState('')
   const redirectHandled = useRef(false)
 
+  // `forcePasswordChange` vem do registro atual no authStore, atualizado pelo
+  // AuthProvider após o signIn. O `fpc` retornado por signIn() também reflete
+  // o estado real do servidor no momento do login (não há cache local do flag).
   useEffect(() => {
     if (isAuthenticated && !redirectHandled.current) {
       redirectHandled.current = true
