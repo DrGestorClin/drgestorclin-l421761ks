@@ -47,7 +47,7 @@ export const getHistoricalPatients = async (doctorId: string): Promise<Patient[]
     expand: 'doctor',
   })
 
-  return patients.filter((p: any) => p.doctor !== doctorId) as Patient[]
+  return (patients as unknown as Patient[]).filter((p) => p.doctor !== doctorId)
 }
 
 export const createPatient = async (data: {
@@ -97,8 +97,9 @@ export const updatePatient = async (
   return pb.collection('patients').update(id, rest)
 }
 
-export const deletePatient = async (id: string): Promise<void> =>
-  pb.collection('patients').delete(id)
+export const deletePatient = async (id: string): Promise<void> => {
+  await pb.collection('patients').delete(id)
+}
 
 export const getPatientPhotoUrl = (patient: Patient): string | null => {
   if (!patient.photo) return null

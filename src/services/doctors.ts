@@ -41,4 +41,6 @@ export const getAllDoctors = async (): Promise<Doctor[]> =>
     sort: '-created',
   })
 
-export const deleteDoctor = async (id: string): Promise<void> => pb.collection('doctors').delete(id)
+export const deleteDoctor = async (id: string): Promise<void> => {
+  await pb.collection('doctors').delete(id)
+}

@@ -68,13 +68,15 @@ export function PatientFormSheet({
         })
         setPhotoPreview(getPatientPhotoUrl(patient))
       } else {
-        setFormData(EMPTY_FORM)
+        // Se houver apenas 1 médico disponível (ou se passado via default), pré-selecionar
+        const defaultDoctor = doctors.length === 1 ? doctors[0].id : ''
+        setFormData({ ...EMPTY_FORM, doctor: defaultDoctor })
         setPhotoPreview(null)
       }
       setSelectedPhoto(null)
       setFieldErrors({})
     }
-  }, [open, patient])
+  }, [open, patient, doctors])
 
   const handleFieldChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))

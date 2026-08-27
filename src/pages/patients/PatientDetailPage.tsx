@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { getPatient, type Patient } from '@/services/patients'
-import { getMedicalRecords, type MedicalRecord } from '@/services/medical-records'
+import { getAllDoctors, type Doctor } from '@/services/doctors'
+import { getMedicalRecordsByPatient, type MedicalRecord } from '@/services/medical-records'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { ArrowLeft, Edit, Plus, Clock, FileText, Lock } from 'lucide-react'
+import { PatientFormSheet } from '@/components/patient-form-sheet'
+import { MedicalRecordForm } from '@/components/medical-record-form'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
@@ -19,8 +22,20 @@ export default function PatientDetailPage() {
   const { toast } = useToast()
 
   const [patient, setPatient] = useState<Patient | null>(null)
+  const [doctors, setDoctors] = useState<Doctor[]>([])
   const [records, setRecords] = useState<MedicalRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
+  const [recordFormOpen, setRecordFormOpen] = useState(false)
+
+  const loadDoctors = useCallback(async () => {
+    try {
+      const data = await getAllDoctors()
+      setDoctors(data)
+    } catch {
+      // silencioso
+    }
+  }, [])
 
   const loadData = useCallback(async () => {
     if (!id) return
@@ -28,7 +43,7 @@ export default function PatientDetailPage() {
       const p = await getPatient(id)
       setPatient(p)
 
-      const r = await getMedicalRecords(id)
+      const r = await getMedicalRecordsByPatient(id)
 
       if (isDoctor && p.doctor !== doctorId) {
         setRecords(r.filter((rec) => rec.doctor === doctorId))
@@ -45,7 +60,8 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     loadData()
-  }, [loadData])
+    loadDoctors()
+  }, [loadData, loadDoctors])
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500 animate-pulse">Carregando dados...</div>
@@ -134,11 +150,36 @@ export default function PatientDetailPage() {
         </div>
 
         {canEditPatient && (
-          <Button variant="outline" className="w-full md:w-auto shrink-0">
+          <Button
+            variant="outline"
+            className="w-full md:w-auto shrink-0"
+            onClick={() => setEditSheetOpen(true)}
+          >
             <Edit className="mr-2 h-4 w-4" /> Editar
           </Button>
         )}
       </div>
+
+      <PatientFormSheet
+        patient={patient}
+        doctors={doctors}
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        onSuccess={() => {
+          loadData()
+        }}
+      />
+
+      <MedicalRecordForm
+        patientId={patient.id}
+        doctors={doctors}
+        defaultDoctorId={doctorId || patient.doctor || ''}
+        open={recordFormOpen}
+        onOpenChange={setRecordFormOpen}
+        onSuccess={() => {
+          loadData()
+        }}
+      />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -147,7 +188,10 @@ export default function PatientDetailPage() {
             Histórico de Prontuários
           </h3>
           {canAddRecord && (
-            <Button className="bg-brand-forest hover:bg-brand-forest/90">
+            <Button
+              className="bg-brand-forest hover:bg-brand-forest/90"
+              onClick={() => setRecordFormOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" /> Novo Registro
             </Button>
           )}

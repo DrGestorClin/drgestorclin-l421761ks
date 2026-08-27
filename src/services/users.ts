@@ -28,7 +28,9 @@ export const getUsers = async (): Promise<ClinicUser[]> =>
 export const updateUserRole = async (id: string, role: string): Promise<ClinicUser> =>
   pb.collection('users').update(id, { role })
 
-export const deleteUser = async (id: string): Promise<void> => pb.collection('users').delete(id)
+export const deleteUser = async (id: string): Promise<void> => {
+  await pb.collection('users').delete(id)
+}
 
 export const createUser = async (data: {
   name: string

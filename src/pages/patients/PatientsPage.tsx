@@ -10,16 +10,29 @@ import {
   getHistoricalPatients,
   type Patient,
 } from '@/services/patients'
+import { getAllDoctors, type Doctor } from '@/services/doctors'
 import { useToast } from '@/hooks/use-toast'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { PatientFormSheet } from '@/components/patient-form-sheet'
 import pb from '@/lib/pocketbase/client'
 
 export default function PatientsPage() {
-  const { isDoctor, doctorId } = useAuth()
+  const { isDoctor, doctorId, isAdmin } = useAuth()
   const [patients, setPatients] = useState<(Patient & { _historical?: boolean })[]>([])
+  const [doctors, setDoctors] = useState<Doctor[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const { toast } = useToast()
+
+  const loadDoctors = useCallback(async () => {
+    try {
+      const data = await getAllDoctors()
+      setDoctors(data)
+    } catch {
+      // Ignora erro silenciosamente ou usa lista vazia
+    }
+  }, [])
 
   const loadPatients = useCallback(async () => {
     try {
@@ -48,7 +61,10 @@ export default function PatientsPage() {
 
   useEffect(() => {
     loadPatients()
-  }, [loadPatients])
+    loadDoctors()
+  }, [loadPatients, loadDoctors])
+
+  const canCreate = isAdmin || isDoctor
 
   const filtered = patients.filter(
     (p) =>
@@ -63,14 +79,24 @@ export default function PatientsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-brand-forest">Pacientes</h1>
           <p className="text-slate-500 mt-1">Gerencie os pacientes e seus prontuários.</p>
         </div>
-        {!isDoctor && (
-          <Button asChild className="bg-brand-forest hover:bg-brand-forest/90">
-            <Link to="/patients/new">
-              <Plus className="mr-2 h-4 w-4" /> Novo Paciente
-            </Link>
+        {canCreate && (
+          <Button
+            onClick={() => setSheetOpen(true)}
+            className="bg-brand-forest hover:bg-brand-forest/90"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Novo Paciente
           </Button>
         )}
       </div>
+
+      <PatientFormSheet
+        doctors={doctors}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onSuccess={() => {
+          loadPatients()
+        }}
+      />
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <div className="relative max-w-md">

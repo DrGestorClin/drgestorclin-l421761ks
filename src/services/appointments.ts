@@ -50,5 +50,6 @@ export const updateAppointment = async (
   data: Partial<Appointment>,
 ): Promise<Appointment> => pb.collection('appointments').update(id, data)
 
-export const deleteAppointment = async (id: string): Promise<void> =>
-  pb.collection('appointments').delete(id)
+export const deleteAppointment = async (id: string): Promise<void> => {
+  await pb.collection('appointments').delete(id)
+}

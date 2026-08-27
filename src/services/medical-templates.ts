@@ -16,5 +16,6 @@ export const createMedicalRecordTemplate = async (data: {
   content: string
 }): Promise<MedicalRecordTemplate> => pb.collection('medical_record_templates').create(data)
 
-export const deleteMedicalRecordTemplate = async (id: string): Promise<void> =>
-  pb.collection('medical_record_templates').delete(id)
+export const deleteMedicalRecordTemplate = async (id: string): Promise<void> => {
+  await pb.collection('medical_record_templates').delete(id)
+}
