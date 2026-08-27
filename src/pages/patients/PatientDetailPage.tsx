@@ -38,7 +38,7 @@ export default function PatientDetailPage() {
   }, [])
 
   const loadData = useCallback(async () => {
-    if (!id) return
+    if (!id || id === 'new') return
     try {
       const p = await getPatient(id)
       setPatient(p)
@@ -71,7 +71,7 @@ export default function PatientDetailPage() {
 
   const isCurrentDoctor = patient.doctor === doctorId
   const isHistorical = isDoctor && !isCurrentDoctor
-  const canEditPatient = isAdmin || isCurrentDoctor
+  const canEditPatient = !isDoctor || isCurrentDoctor
   const canAddRecord = isCurrentDoctor
 
   const avatarUrl = patient.photo

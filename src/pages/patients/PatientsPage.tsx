@@ -17,7 +17,7 @@ import { PatientFormSheet } from '@/components/patient-form-sheet'
 import pb from '@/lib/pocketbase/client'
 
 export default function PatientsPage() {
-  const { isDoctor, doctorId, isAdmin } = useAuth()
+  const { isDoctor, doctorId, isAuthenticated } = useAuth()
   const [patients, setPatients] = useState<(Patient & { _historical?: boolean })[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [search, setSearch] = useState('')
@@ -64,7 +64,7 @@ export default function PatientsPage() {
     loadDoctors()
   }, [loadPatients, loadDoctors])
 
-  const canCreate = isAdmin || isDoctor
+  const canCreate = isAuthenticated
 
   const filtered = patients.filter(
     (p) =>

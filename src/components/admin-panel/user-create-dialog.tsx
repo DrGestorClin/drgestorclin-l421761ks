@@ -24,12 +24,11 @@ import {
   findOrCreateEstablishment,
   type Establishment,
 } from '@/services/establishments'
-import { getDoctors, type Doctor } from '@/services/doctors'
 import { validatePassword, passwordRules } from '@/lib/password-validation'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import pb from '@/lib/pocketbase/client'
 
-type UserType = 'ADM' | 'Clinica' | 'Medico' | 'Assistente' | 'patient'
+type UserType = 'ADM' | 'Clinica' | 'Medico' | 'Assistente'
 
 const LGPD_TEXT =
   'Os dados coletados estão sujeitos às normas da LGPD. O sigilo médico e a responsabilidade jurídica sobre as informações inseridas são de total responsabilidade do profissional de saúde.'
@@ -51,22 +50,16 @@ export function UserCreateDialog({
   const [crm, setCrm] = useState('')
   const [specialty, setSpecialty] = useState('')
   const [phone, setPhone] = useState('')
-  const [birthDate, setBirthDate] = useState('')
   const [estFilter, setEstFilter] = useState<'all' | 'Clínica' | 'Consultório'>('all')
   const [estMode, setEstMode] = useState<'existing' | 'new'>('existing')
   const [selectedEstId, setSelectedEstId] = useState('')
   const [newEstType, setNewEstType] = useState<'Clínica' | 'Consultório'>('Clínica')
   const [newEstName, setNewEstName] = useState('')
-  const [selectedDoctor, setSelectedDoctor] = useState('')
-  const [doctors, setDoctors] = useState<Doctor[]>([])
   const [establishments, setEstablishments] = useState<Establishment[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (open) {
-      getDoctors()
-        .then(setDoctors)
-        .catch(() => {})
       getEstablishments()
         .then(setEstablishments)
         .catch(() => {})
@@ -83,18 +76,14 @@ export function UserCreateDialog({
     setCrm('')
     setSpecialty('')
     setPhone('')
-    setBirthDate('')
     setEstFilter('all')
     setEstMode('existing')
     setSelectedEstId('')
     setNewEstType('Clínica')
     setNewEstName('')
-    setSelectedDoctor('')
   }
 
-  const isPatient = userType === 'patient'
   const needsEstablishment = userType !== 'ADM'
-  const needsPassword = !isPatient
   const passwordValid = validatePassword(password)
 
   const establishmentValid =
@@ -105,10 +94,9 @@ export function UserCreateDialog({
   const canSubmit = Boolean(
     name.trim() &&
     email.trim() &&
-    (isPatient || passwordValid) &&
+    passwordValid &&
     (userType !== 'Medico' || (crm.trim() && specialty.trim())) &&
-    establishmentValid &&
-    (!isPatient || selectedDoctor),
+    establishmentValid,
   )
 
   const handleSubmit = async () => {
@@ -125,16 +113,7 @@ export function UserCreateDialog({
         }
       }
 
-      if (isPatient) {
-        await pb.collection('patients').create({
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          birth_date: birthDate || null,
-          doctor: selectedDoctor,
-          establishment_ref: estId,
-        })
-      } else if (userType === 'Medico') {
+      if (userType === 'Medico') {
         const doctor = await pb.collection('doctors').create({
           name: name.trim(),
           crm: crm.trim(),
@@ -190,14 +169,12 @@ export function UserCreateDialog({
           <p className="text-xs text-amber-800">{LGPD_TEXT}</p>
         </div>
 
-        {!isPatient && (
-          <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 border border-blue-200">
-            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-800">
-              O usuário será obrigado a alterar a senha no primeiro acesso ao sistema.
-            </p>
-          </div>
-        )}
+        <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 border border-blue-200">
+          <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-800">
+            O usuário será obrigado a alterar a senha no primeiro acesso ao sistema.
+          </p>
+        </div>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -211,7 +188,6 @@ export function UserCreateDialog({
                 <SelectItem value="Clinica">Clínica</SelectItem>
                 <SelectItem value="Medico">Médico</SelectItem>
                 <SelectItem value="Assistente">Atendente</SelectItem>
-                <SelectItem value="patient">Paciente</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -235,36 +211,34 @@ export function UserCreateDialog({
             />
           </div>
 
-          {needsPassword && (
-            <div className="space-y-1.5">
-              <Label>Senha</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
-              <div className="space-y-1 rounded-lg bg-muted/50 p-2">
-                {passwordRules.map(
-                  (rule: { label: string; test: (v: string) => boolean }, i: number) => {
-                    const passed = rule.test(password)
-                    return (
-                      <div key={i} className="flex items-center gap-1.5 text-xs">
-                        {passed ? (
-                          <CheckCircle className="h-3 w-3 text-green-600" />
-                        ) : (
-                          <div className="h-3 w-3 rounded-full border border-muted-foreground/30" />
-                        )}
-                        <span className={passed ? 'text-green-700' : 'text-muted-foreground'}>
-                          {rule.label}
-                        </span>
-                      </div>
-                    )
-                  },
-                )}
-              </div>
+          <div className="space-y-1.5">
+            <Label>Senha</Label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+            <div className="space-y-1 rounded-lg bg-muted/50 p-2">
+              {passwordRules.map(
+                (rule: { label: string; test: (v: string) => boolean }, i: number) => {
+                  const passed = rule.test(password)
+                  return (
+                    <div key={i} className="flex items-center gap-1.5 text-xs">
+                      {passed ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <div className="h-3 w-3 rounded-full border border-muted-foreground/30" />
+                      )}
+                      <span className={passed ? 'text-green-700' : 'text-muted-foreground'}>
+                        {rule.label}
+                      </span>
+                    </div>
+                  )
+                },
+              )}
             </div>
-          )}
+          </div>
 
           {userType === 'Medico' && (
             <>
@@ -287,7 +261,7 @@ export function UserCreateDialog({
             </>
           )}
 
-          {(userType === 'Medico' || isPatient) && (
+          {userType === 'Medico' && (
             <div className="space-y-1.5">
               <Label>Telefone</Label>
               <Input
@@ -296,34 +270,6 @@ export function UserCreateDialog({
                 placeholder="(00) 00000-0000"
               />
             </div>
-          )}
-
-          {isPatient && (
-            <>
-              <div className="space-y-1.5">
-                <Label>Data de Nascimento</Label>
-                <Input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Médico Responsável</Label>
-                <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um médico" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.name} — {d.specialty}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
           )}
 
           {needsEstablishment && (

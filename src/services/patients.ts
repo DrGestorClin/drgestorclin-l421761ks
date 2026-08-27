@@ -21,8 +21,12 @@ export const getPatients = async (): Promise<Patient[]> =>
     sort: '-created',
   })
 
-export const getPatient = async (id: string): Promise<Patient> =>
-  pb.collection('patients').getOne(id, { expand: 'doctor' })
+export const getPatient = async (id: string): Promise<Patient> => {
+  if (!id || id === 'new') {
+    throw new Error('ID de paciente inválido')
+  }
+  return pb.collection('patients').getOne(id, { expand: 'doctor' })
+}
 
 export const getPatientsByDoctor = async (doctorId: string): Promise<Patient[]> =>
   pb.collection('patients').getFullList({
